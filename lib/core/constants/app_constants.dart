@@ -8,8 +8,9 @@ abstract final class AppConstants {
   static const String appVersion = '1.0.0';
 
   // ── Gemini AI ─────────────────────────────────────────────────────────────
-  /// Replace with your actual Gemini API key before running.
-  static const String geminiApiKey = 'AIzaSyAIlhF8-FWNDU8xN4WAWweGJnNppBIXkes';
+  /// Pass the key at compile time using: --dart-define=GEMINI_API_KEY=your_key
+  static const String geminiApiKey =
+      String.fromEnvironment('GEMINI_API_KEY', defaultValue: '');
   static const String geminiBaseUrl =
       'https://generativelanguage.googleapis.com/v1beta/models';
   static const String geminiModel = 'gemini-1.5-flash';
