@@ -1,3 +1,5 @@
+import 'env.dart';
+
 /// Application-wide constants.
 ///
 /// Route names, Firestore collections, Hive boxes, and API config
@@ -8,9 +10,7 @@ abstract final class AppConstants {
   static const String appVersion = '1.0.0';
 
   // ── Gemini AI ─────────────────────────────────────────────────────────────
-  /// Pass the key at compile time using: --dart-define=GEMINI_API_KEY=your_key
-  static const String geminiApiKey =
-      String.fromEnvironment('GEMINI_API_KEY', defaultValue: '');
+  static const String geminiApiKey = Env.geminiApiKey;
   static const String geminiBaseUrl =
       'https://generativelanguage.googleapis.com/v1beta/models';
   static const String geminiModel = 'gemini-1.5-flash';

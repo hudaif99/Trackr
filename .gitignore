@@ -51,6 +51,7 @@ app.*.map.json
 *.keystore
 key.properties
 android/key.properties
+lib/core/constants/env.dart
 
 # Firebase
 android/app/google-services.json
