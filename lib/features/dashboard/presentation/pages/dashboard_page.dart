@@ -2,6 +2,7 @@ import 'dart:math' as math;
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../core/constants/app_constants.dart';
 import '../../../../core/extensions/double_x.dart';
@@ -27,7 +28,14 @@ class DashboardPage extends StatelessWidget {
         if (authState is! AuthAuthenticated) return const SizedBox.shrink();
 
         final user = authState.user;
-        context.read<DashboardBloc>().add(DashboardLoadRequested(user.uid));
+
+        // Only load once — skip if data is already loaded or being loaded.
+        // Dispatching on every build() caused a flash each time the user
+        // switched back to this tab.
+        final dashboardState = context.read<DashboardBloc>().state;
+        if (dashboardState is DashboardInitial) {
+          context.read<DashboardBloc>().add(DashboardLoadRequested(user.uid));
+        }
 
         return Scaffold(
           backgroundColor: AppColors.background,
@@ -45,12 +53,6 @@ class DashboardPage extends StatelessWidget {
                       .add(DashboardRefreshRequested(user.uid)),
                 ),
             },
-          ),
-          floatingActionButton: FloatingActionButton(
-            heroTag: 'dash_fab',
-            backgroundColor: AppColors.primary,
-            onPressed: () => context.go(AppConstants.routeAddExpense),
-            child: const Icon(Icons.add_rounded, color: Colors.white),
           ),
         );
       },
@@ -152,7 +154,7 @@ class DashboardPage extends StatelessWidget {
                   border: Border.all(color: AppColors.border),
                 ),
                 child: IconButton(
-                  icon: const Icon(Icons.notifications_outlined, size: 20),
+                  icon: const FaIcon(FontAwesomeIcons.bell, size: 18),
                   color: AppColors.textSecondary,
                   onPressed: () {},
                 ),
@@ -207,7 +209,7 @@ class DashboardPage extends StatelessWidget {
                   ...summary.recentExpenses.map(
                     (e) => ExpenseTile(
                       expense: e,
-                      onTap: () => context.go('/expenses/${e.id}'),
+                      onTap: () => context.go('/expenses/${e.id}', extra: e),
                     ),
                   ),
                 const SizedBox(height: 100),
@@ -868,6 +870,9 @@ class _MonthlyLineChart extends StatelessWidget {
                 showTitles: true,
                 getTitlesWidget: (val, meta) {
                   final i = val.toInt();
+                  // Only draw at exact integer positions to avoid duplicate
+                  // labels caused by fl_chart generating fractional ticks.
+                  if (val != i.toDouble()) return const SizedBox();
                   if (i < 0 || i >= trend.length) return const SizedBox();
                   return Padding(
                     padding: const EdgeInsets.only(top: 6),
@@ -877,6 +882,7 @@ class _MonthlyLineChart extends StatelessWidget {
                     ),
                   );
                 },
+                interval: 1,
                 reservedSize: 28,
               ),
             ),

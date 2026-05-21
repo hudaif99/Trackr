@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../core/constants/app_constants.dart';
 import '../../../../core/theme/app_colors.dart';
@@ -79,10 +80,10 @@ class _LoginPageState extends State<LoginPage> {
                         color: AppColors.primary,
                         borderRadius: BorderRadius.circular(14),
                       ),
-                      child: const Icon(
-                        Icons.bolt_rounded,
+                      child: const FaIcon(
+                        FontAwesomeIcons.bolt,
                         color: Colors.white,
-                        size: 28,
+                        size: 24,
                       ),
                     ),
                     const SizedBox(height: 24),
@@ -103,8 +104,8 @@ class _LoginPageState extends State<LoginPage> {
                       controller: _emailController,
                       keyboardType: TextInputType.emailAddress,
                       textInputAction: TextInputAction.next,
-                      prefixIcon: const Icon(Icons.mail_outline_rounded,
-                          color: AppColors.textSecondary, size: 20),
+                      prefixIcon: const FaIcon(FontAwesomeIcons.envelope,
+                          color: AppColors.textSecondary, size: 16),
                       validator: (v) {
                         if (v == null || v.trim().isEmpty) {
                           return 'Please enter your email.';
@@ -125,15 +126,15 @@ class _LoginPageState extends State<LoginPage> {
                       obscureText: _obscurePassword,
                       textInputAction: TextInputAction.done,
                       onSubmitted: (_) => _submit(),
-                      prefixIcon: const Icon(Icons.lock_outline_rounded,
-                          color: AppColors.textSecondary, size: 20),
+                      prefixIcon: const FaIcon(FontAwesomeIcons.lock,
+                          color: AppColors.textSecondary, size: 16),
                       suffixIcon: IconButton(
-                        icon: Icon(
+                        icon: FaIcon(
                           _obscurePassword
-                              ? Icons.visibility_off_outlined
-                              : Icons.visibility_outlined,
+                              ? FontAwesomeIcons.eyeSlash
+                              : FontAwesomeIcons.eye,
                           color: AppColors.textSecondary,
-                          size: 20,
+                          size: 16,
                         ),
                         onPressed: () =>
                             setState(() => _obscurePassword = !_obscurePassword),

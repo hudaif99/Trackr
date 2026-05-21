@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../core/constants/app_constants.dart';
+import '../../../../core/extensions/double_x.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/widgets/skeleton_loader.dart';
@@ -49,12 +51,6 @@ class ExpenseListPage extends StatelessWidget {
                       .add(ExpenseFilterChanged(category));
                 },
               ),
-              actions: [
-                IconButton(
-                  icon: const Icon(Icons.add_rounded),
-                  onPressed: () => context.go(AppConstants.routeAddExpense),
-                ),
-              ],
             ),
             body: BlocBuilder<ExpenseListBloc, ExpenseListState>(
               builder: (context, state) => switch (state) {
@@ -78,7 +74,7 @@ class ExpenseListPage extends StatelessWidget {
             floatingActionButton: FloatingActionButton(
               heroTag: 'expense_fab',
               onPressed: () => context.go(AppConstants.routeAddExpense),
-              child: const Icon(Icons.add_rounded),
+              child: const FaIcon(FontAwesomeIcons.plus, size: 18),
             ),
           ),
         );
@@ -117,7 +113,7 @@ class ExpenseListPage extends StatelessWidget {
             final expense = expenses[i - 1];
             return ExpenseTile(
               expense: expense,
-              onTap: () => ctx.go('/expenses/${expense.id}'),
+              onTap: () => ctx.go('/expenses/${expense.id}', extra: expense),
             );
           },
         ),
@@ -144,7 +140,7 @@ class ExpenseListPage extends StatelessWidget {
               ),
               const SizedBox(height: 4),
               Text(
-                '₹${total.toStringAsFixed(0)}',
+                total.inr,
                 style: AppTextStyles.amountLarge.copyWith(
                   color: AppColors.expense,
                 ),

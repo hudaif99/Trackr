@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:fluxo/core/theme/app_colors.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:go_router/go_router.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -17,12 +19,15 @@ import '../../../features/dashboard/presentation/bloc/dashboard_bloc.dart';
 import '../../../features/dashboard/presentation/pages/dashboard_page.dart';
 import '../../../features/expenses/presentation/bloc/expense_bloc.dart';
 import '../../../features/expenses/presentation/pages/add_expense_page.dart';
+import '../../../features/expenses/presentation/pages/expense_detail_page.dart';
 import '../../../features/expenses/presentation/pages/expense_list_page.dart';
+import '../../../features/expenses/domain/entities/expense_entity.dart';
 import '../../../features/onboarding/presentation/pages/onboarding_page.dart';
 
 /// Application router using go_router with a shell for bottom navigation.
 class AppRouter {
-  static final _rootNavigatorKey = GlobalKey<NavigatorState>(debugLabel: 'root');
+  static final _rootNavigatorKey =
+      GlobalKey<NavigatorState>(debugLabel: 'root');
   static final _shellNavigatorKey =
       GlobalKey<NavigatorState>(debugLabel: 'shell');
 
@@ -110,13 +115,23 @@ class AppRouter {
         GoRoute(
           path: AppConstants.routeAddExpense,
           parentNavigatorKey: _rootNavigatorKey,
-          builder: (_, __) => MultiBlocProvider(
+          builder: (_, state) => MultiBlocProvider(
             providers: [
               BlocProvider(create: (_) => getIt<ExpenseFormBloc>()),
               BlocProvider(create: (_) => getIt<AiCategorizationCubit>()),
             ],
             child: const AddExpensePage(),
           ),
+        ),
+
+        // ── Expense detail ────────────────────────────────────────────────
+        GoRoute(
+          path: '/expenses/:id',
+          parentNavigatorKey: _rootNavigatorKey,
+          builder: (_, state) {
+            final expense = state.extra as ExpenseEntity;
+            return ExpenseDetailPage(expense: expense);
+          },
         ),
       ],
     );
@@ -144,6 +159,13 @@ class _ShellScaffold extends StatelessWidget {
 
           return Scaffold(
             body: child,
+            floatingActionButton: FloatingActionButton(
+              heroTag: 'shell_fab',
+              backgroundColor: AppColors.primary,
+              onPressed: () => context.go(AppConstants.routeAddExpense),
+              child: const FaIcon(FontAwesomeIcons.plus,
+                  color: Colors.white, size: 20),
+            ),
             bottomNavigationBar: NavigationBar(
               selectedIndex: index,
               onDestinationSelected: (i) {
@@ -158,18 +180,18 @@ class _ShellScaffold extends StatelessWidget {
               },
               destinations: const [
                 NavigationDestination(
-                  icon: Icon(Icons.home_outlined),
-                  selectedIcon: Icon(Icons.home_rounded),
+                  icon: FaIcon(FontAwesomeIcons.house, size: 18),
+                  selectedIcon: FaIcon(FontAwesomeIcons.house, size: 18),
                   label: 'Home',
                 ),
                 NavigationDestination(
-                  icon: Icon(Icons.receipt_long_outlined),
-                  selectedIcon: Icon(Icons.receipt_long_rounded),
+                  icon: FaIcon(FontAwesomeIcons.receipt, size: 18),
+                  selectedIcon: FaIcon(FontAwesomeIcons.receipt, size: 18),
                   label: 'Expenses',
                 ),
                 NavigationDestination(
-                  icon: Icon(Icons.bar_chart_outlined),
-                  selectedIcon: Icon(Icons.bar_chart_rounded),
+                  icon: FaIcon(FontAwesomeIcons.chartLine, size: 18),
+                  selectedIcon: FaIcon(FontAwesomeIcons.chartLine, size: 18),
                   label: 'Analytics',
                 ),
               ],

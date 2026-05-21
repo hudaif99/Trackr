@@ -1,3 +1,5 @@
+import 'dart:developer';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../../../core/constants/app_constants.dart';
 import '../../../../core/errors/exceptions.dart';
@@ -23,25 +25,23 @@ class DashboardRemoteDataSource {
       final snap = await _firestore
           .collection(AppConstants.expensesCollection)
           .where('userId', isEqualTo: userId)
-          .where('date', isGreaterThanOrEqualTo: Timestamp.fromDate(sixMonthsAgo))
+          .where('date',
+              isGreaterThanOrEqualTo: Timestamp.fromDate(sixMonthsAgo))
           .orderBy('date', descending: true)
           .get();
 
-      final expenses = snap.docs
-          .map((doc) => ExpenseModel.fromFirestore(doc))
-          .toList();
+      final expenses =
+          snap.docs.map((doc) => ExpenseModel.fromFirestore(doc)).toList();
 
       // ── This month ───────────────────────────────────────────────────────
-      final thisMonth = expenses
-          .where((e) => !e.date.isBefore(thisMonthStart))
-          .toList();
+      final thisMonth =
+          expenses.where((e) => !e.date.isBefore(thisMonthStart)).toList();
       final totalThisMonth = thisMonth.fold(0.0, (s, e) => s + e.amount);
 
       // ── Last month ────────────────────────────────────────────────────────
       final lastMonth = expenses
           .where((e) =>
-              !e.date.isBefore(lastMonthStart) &&
-              !e.date.isAfter(lastMonthEnd))
+              !e.date.isBefore(lastMonthStart) && !e.date.isAfter(lastMonthEnd))
           .toList();
       final totalLastMonth = lastMonth.fold(0.0, (s, e) => s + e.amount);
 
@@ -51,22 +51,19 @@ class DashboardRemoteDataSource {
         breakdown[e.category] = (breakdown[e.category] ?? 0) + e.amount;
       }
 
-      // ── Monthly trend (last 6 months) ─────────────────────────────────────
+      // ── Monthly trend (always 6 slots, 0 for months with no data) ────────
+      // Build a map of all data keyed by 'yyyy-MM'
       final trendMap = <String, double>{};
       for (final e in expenses) {
         final key = '${e.date.year}-${e.date.month.toString().padLeft(2, '0')}';
         trendMap[key] = (trendMap[key] ?? 0) + e.amount;
       }
-      final trend = trendMap.entries
-          .map((entry) {
-            final parts = entry.key.split('-');
-            return MonthlyTrendPoint(
-              month: DateTime(int.parse(parts[0]), int.parse(parts[1])),
-              total: entry.value,
-            );
-          })
-          .toList()
-        ..sort((a, b) => a.month.compareTo(b.month));
+      // Generate all 6 month slots regardless of whether there is data
+      final trend = List.generate(6, (i) {
+        final month = DateTime(now.year, now.month - 5 + i);
+        final key = '${month.year}-${month.month.toString().padLeft(2, '0')}';
+        return MonthlyTrendPoint(month: month, total: trendMap[key] ?? 0);
+      });
 
       return DashboardSummaryEntity(
         totalThisMonth: totalThisMonth,
@@ -76,10 +73,10 @@ class DashboardRemoteDataSource {
         monthlyTrend: trend,
       );
     } catch (e, stack) {
-      print('--- FIRESTORE INDEX ERROR ---');
-      print('Firebase provides a direct link to create the missing index:');
-      print(e.toString());
-      print('-----------------------------');
+      log('--- FIRESTORE INDEX ERROR ---');
+      log('Firebase provides a direct link to create the missing index:');
+      log(e.toString());
+      log('-----------------------------');
       throw ServerException('Failed to load dashboard: ${e.toString()}');
     }
   }

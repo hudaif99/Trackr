@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:go_router/go_router.dart';
 import 'package:uuid/uuid.dart';
 import '../../../../core/constants/app_constants.dart';
@@ -84,8 +85,8 @@ class _AddExpensePageState extends State<AddExpensePage> {
             if (state is ExpenseFormSuccess) {
               context.go(AppConstants.routeExpenses);
               ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: const Text('Expense added ✓'),
+                const SnackBar(
+                  content: Text('Expense added ✓'),
                   backgroundColor: AppColors.primary,
                   behavior: SnackBarBehavior.floating,
                 ),
@@ -114,7 +115,7 @@ class _AddExpensePageState extends State<AddExpensePage> {
         appBar: AppBar(
           title: const Text('Add Expense'),
           leading: IconButton(
-            icon: const Icon(Icons.close_rounded),
+            icon: const FaIcon(FontAwesomeIcons.xmark, size: 18),
             onPressed: () => context.go(AppConstants.routeExpenses),
           ),
         ),
@@ -210,8 +211,8 @@ class _AddExpensePageState extends State<AddExpensePage> {
                   ),
                   child: Row(
                     children: [
-                      const Icon(Icons.calendar_today_rounded,
-                          color: AppColors.textSecondary, size: 18),
+                      const FaIcon(FontAwesomeIcons.calendarDays,
+                          color: AppColors.textSecondary, size: 16),
                       const SizedBox(width: 10),
                       Text(
                         '${_date.day} ${_monthName(_date.month)} ${_date.year}',
@@ -291,10 +292,10 @@ class _AddExpensePageState extends State<AddExpensePage> {
         ),
       AiCategorizationSuccess(:final usedFallback) => Tooltip(
           message: usedFallback ? 'Categorized locally' : 'AI categorized',
-          child: Icon(
-            Icons.auto_awesome_rounded,
+          child: FaIcon(
+            FontAwesomeIcons.wandMagicSparkles,
             color: usedFallback ? AppColors.textSecondary : AppColors.primary,
-            size: 20,
+            size: 18,
           ),
         ),
       _ => null,

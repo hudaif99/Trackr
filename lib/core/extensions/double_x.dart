@@ -1,25 +1,37 @@
 import 'package:intl/intl.dart';
 
 extension DoubleX on double {
-  /// Formats the value as Indian Rupees, e.g. "₹1,450.00".
+  /// Formats as Indian Rupees, stripping unnecessary decimal zeros.
+  /// ₹10.00 → ₹10 | ₹10.50 → ₹10.5 | ₹10.55 → ₹10.55
   String get inr {
     final formatter = NumberFormat.currency(
       locale: 'en_IN',
       symbol: '₹',
       decimalDigits: 2,
     );
-    return formatter.format(this);
+    final raw = formatter.format(this);
+    // Strip trailing zeros after the decimal point, then a lone decimal.
+    return raw.replaceAll(RegExp(r'\.?0+$'), '');
   }
 
-  /// Compact currency, e.g. "₹1.2K", "₹45K", "₹1.5L".
+  /// Compact currency: ₹1.2L, ₹45K, ₹850 (no unnecessary decimals).
   String get inrCompact {
-    if (this >= 100000) return '₹${(this / 100000).toStringAsFixed(1)}L';
-    if (this >= 1000) return '₹${(this / 1000).toStringAsFixed(1)}K';
-    return '₹${toStringAsFixed(0)}';
+    if (this >= 100000) {
+      final v = this / 100000;
+      return '₹${v == v.truncateToDouble() ? v.toInt() : v.toStringAsFixed(1)}L';
+    }
+    if (this >= 1000) {
+      final v = this / 1000;
+      return '₹${v == v.truncateToDouble() ? v.toInt() : v.toStringAsFixed(1)}K';
+    }
+    return inr;
   }
 
-  /// Returns a string with two decimal places (no currency symbol).
-  String get twoDecimal => toStringAsFixed(2);
+  /// Returns a numeric string with decimals only when needed.
+  /// 10.00 → "10" | 10.50 → "10.5" | 10.55 → "10.55"
+  String get smartDecimal => this == truncateToDouble()
+      ? toInt().toString()
+      : toStringAsFixed(2).replaceAll(RegExp(r'0+$'), '');
 
   /// Clamps the value between [min] and [max] and returns a percentage 0–1.
   double progressOf(double min, double max) {

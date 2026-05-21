@@ -152,7 +152,7 @@ class AnalyticsBloc extends Bloc<AnalyticsEvent, AnalyticsState> {
     final thisMonth = expenses.where((e) => !e.date.isBefore(thisMonthStart));
     final totalThisMonth = thisMonth.fold(0.0, (s, e) => s + e.amount);
 
-    // Monthly totals
+    // Monthly totals — build a map keyed by 'yyyy-M'
     final monthMap = <String, double>{};
     for (final e in expenses) {
       final k = '${e.date.year}-${e.date.month}';
@@ -162,16 +162,12 @@ class AnalyticsBloc extends Bloc<AnalyticsEvent, AnalyticsState> {
         ? 0.0
         : monthMap.values.fold(0.0, (s, v) => s + v) / monthMap.length;
 
-    final trend = monthMap.entries
-        .map((e) {
-          final p = e.key.split('-');
-          return MonthlyTrendPoint(
-            month: DateTime(int.parse(p[0]), int.parse(p[1])),
-            total: e.value,
-          );
-        })
-        .toList()
-      ..sort((a, b) => a.month.compareTo(b.month));
+    // Always generate all 6 monthly slots — 0 for months with no data
+    final trend = List.generate(6, (i) {
+      final month = DateTime(now.year, now.month - 5 + i);
+      final k = '${month.year}-${month.month}';
+      return MonthlyTrendPoint(month: month, total: monthMap[k] ?? 0);
+    });
 
     // Category breakdown
     final catMap = <ExpenseCategory, double>{};

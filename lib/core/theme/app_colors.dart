@@ -16,8 +16,8 @@ abstract final class AppColors {
   static const Color accent = Color(0xFF22D3EE);
 
   // ── Semantic ──────────────────────────────────────────────────────────────
-  static const Color expense = Color(0xFFEF4444);
-  static const Color expenseLight = Color(0xFFFCA5A5);
+  static const Color expense = Color(0xFFF43F5E);       // rose-500 — pairs well on dark slate
+  static const Color expenseLight = Color(0xFFFDA4AF);  // rose-300 — muted light variant
   static const Color income = Color(0xFF10B981);
   static const Color warning = Color(0xFFF59E0B);
   static const Color info = Color(0xFF3B82F6);
@@ -39,7 +39,7 @@ abstract final class AppColors {
   static const Color catFood = Color(0xFFF97316);
   static const Color catTravel = Color(0xFF3B82F6);
   static const Color catShopping = Color(0xFFA855F7);
-  static const Color catBills = Color(0xFFEF4444);
+  static const Color catBills = Color(0xFFF43F5E);
   static const Color catEntertainment = Color(0xFFEC4899);
   static const Color catHealth = Color(0xFF10B981);
   static const Color catFuel = Color(0xFFF59E0B);
