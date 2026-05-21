@@ -78,6 +78,10 @@ final class AnalyticsLoading extends AnalyticsState {
   const AnalyticsLoading();
 }
 
+final class AnalyticsEmpty extends AnalyticsState {
+  const AnalyticsEmpty();
+}
+
 final class AnalyticsLoaded extends AnalyticsState {
   final AnalyticsSummary summary;
   const AnalyticsLoaded(this.summary);
@@ -128,7 +132,7 @@ class AnalyticsBloc extends Bloc<AnalyticsEvent, AnalyticsState> {
           .toList();
 
       if (expenses.isEmpty) {
-        emit(const AnalyticsError('No expense data yet.'));
+        emit(const AnalyticsEmpty());
         return;
       }
 

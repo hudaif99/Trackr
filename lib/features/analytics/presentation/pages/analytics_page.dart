@@ -1,6 +1,7 @@
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import '../../../../core/extensions/double_x.dart';
 import '../../../../core/extensions/date_time_x.dart';
 import '../../../../core/theme/app_colors.dart';
@@ -30,6 +31,11 @@ class AnalyticsPage extends StatelessWidget {
               AnalyticsInitial() => _initLoad(context, userId),
               AnalyticsLoading() => _skeleton(),
               AnalyticsLoaded(:final summary) => _content(context, summary),
+              AnalyticsEmpty() => const EmptyState(
+                  icon: FontAwesomeIcons.chartPie,
+                  title: 'No analytics yet',
+                  subtitle: 'Start tracking expenses to see your insights',
+                ),
               AnalyticsError(:final message) => ErrorState(
                   message: message,
                   onRetry: () => context

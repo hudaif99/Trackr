@@ -208,13 +208,14 @@ class _ShellScaffoldState extends State<_ShellScaffold> {
             },
             child: Scaffold(
               body: widget.child,
-              floatingActionButton: FloatingActionButton(
-                heroTag: 'shell_fab',
-                backgroundColor: AppColors.primary,
-                onPressed: () => context.push(AppConstants.routeAddExpense),
-                child: const FaIcon(FontAwesomeIcons.plus,
-                    color: Colors.white, size: 20),
-              ),
+              floatingActionButton: index == 2
+                  ? BlocBuilder<AnalyticsBloc, AnalyticsState>(
+                      builder: (context, state) {
+                        if (state is AnalyticsLoaded) return const SizedBox.shrink();
+                        return _buildFab(context);
+                      },
+                    )
+                  : _buildFab(context),
               bottomNavigationBar: NavigationBar(
                 selectedIndex: index,
                 onDestinationSelected: (i) {
@@ -249,6 +250,15 @@ class _ShellScaffoldState extends State<_ShellScaffold> {
           );
         },
       ),
+    );
+  }
+
+  Widget _buildFab(BuildContext context) {
+    return FloatingActionButton(
+      heroTag: 'shell_fab',
+      backgroundColor: AppColors.primary,
+      onPressed: () => context.push(AppConstants.routeAddExpense),
+      child: const FaIcon(FontAwesomeIcons.plus, color: Colors.white, size: 20),
     );
   }
 

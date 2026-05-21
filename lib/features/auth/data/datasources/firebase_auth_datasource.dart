@@ -1,3 +1,5 @@
+import 'dart:developer';
+
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -102,7 +104,8 @@ class FirebaseAuthDataSource {
     } on FirebaseAuthException catch (e) {
       throw AuthException(_mapAuthError(e.code));
     } catch (e) {
-      throw AuthException('Google sign-in failed. Please try again.');
+      log('error from firebase datasource', error: e);
+      throw AuthException('Google sign-in failed. ${e.toString()}');
     }
   }
 
@@ -140,9 +143,8 @@ class FirebaseAuthDataSource {
   }
 
   Future<void> _saveUserToFirestore(UserModel model) async {
-    final doc = _firestore
-        .collection(AppConstants.usersCollection)
-        .doc(model.uid);
+    final doc =
+        _firestore.collection(AppConstants.usersCollection).doc(model.uid);
     final snap = await doc.get();
     // Don't overwrite existing users — only write on first sign-up.
     if (!snap.exists) {

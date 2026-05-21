@@ -154,7 +154,8 @@ class DashboardPage extends StatelessWidget {
                   border: Border.all(color: AppColors.border),
                 ),
                 child: IconButton(
-                  icon: const FaIcon(FontAwesomeIcons.arrowRightFromBracket, size: 16),
+                  icon: const FaIcon(FontAwesomeIcons.arrowRightFromBracket,
+                      size: 16),
                   color: AppColors.expense,
                   onPressed: () {
                     showDialog(
@@ -162,18 +163,24 @@ class DashboardPage extends StatelessWidget {
                       builder: (context) => AlertDialog(
                         backgroundColor: AppColors.surface,
                         title: const Text('Log Out'),
-                        content: const Text('Are you sure you want to log out?'),
+                        content:
+                            const Text('Are you sure you want to log out?'),
                         actions: [
                           TextButton(
                             onPressed: () => Navigator.pop(context),
-                            child: const Text('Cancel', style: TextStyle(color: AppColors.textSecondary)),
+                            child: const Text('Cancel',
+                                style:
+                                    TextStyle(color: AppColors.textSecondary)),
                           ),
                           TextButton(
                             onPressed: () {
                               Navigator.pop(context);
-                              context.read<AuthBloc>().add(const AuthLogoutRequested());
+                              context
+                                  .read<AuthBloc>()
+                                  .add(const AuthLogoutRequested());
                             },
-                            child: const Text('Logout', style: TextStyle(color: AppColors.expense)),
+                            child: const Text('Logout',
+                                style: TextStyle(color: AppColors.expense)),
                           ),
                         ],
                       ),
@@ -605,6 +612,7 @@ class _ChartEmptyState extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
+      width: double.infinity,
       margin: const EdgeInsets.symmetric(horizontal: 16),
       padding: const EdgeInsets.symmetric(vertical: 36, horizontal: 24),
       decoration: BoxDecoration(
@@ -655,6 +663,7 @@ class _EmptyRecentTransactions extends StatelessWidget {
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16),
       padding: const EdgeInsets.symmetric(vertical: 36, horizontal: 24),
+      width: double.infinity,
       decoration: BoxDecoration(
         color: AppColors.surface,
         borderRadius: BorderRadius.circular(20),
@@ -883,7 +892,7 @@ class _MonthlyLineChart extends StatelessWidget {
           gridData: FlGridData(
             show: true,
             drawVerticalLine: false,
-            horizontalInterval: maxY / 4,
+            horizontalInterval: maxY > 0 ? maxY / 4 : 1,
             getDrawingHorizontalLine: (val) => FlLine(
               color: AppColors.cardBorder,
               strokeWidth: 1,
