@@ -1,3 +1,4 @@
+import 'dart:math' as math;
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -26,15 +27,14 @@ class DashboardPage extends StatelessWidget {
         if (authState is! AuthAuthenticated) return const SizedBox.shrink();
 
         final user = authState.user;
-        context
-            .read<DashboardBloc>()
-            .add(DashboardLoadRequested(user.uid));
+        context.read<DashboardBloc>().add(DashboardLoadRequested(user.uid));
 
         return Scaffold(
           backgroundColor: AppColors.background,
           body: BlocBuilder<DashboardBloc, DashboardState>(
             builder: (context, state) => switch (state) {
-              DashboardInitial() || DashboardLoading() =>
+              DashboardInitial() ||
+              DashboardLoading() =>
                 _buildSkeleton(context),
               DashboardLoaded(:final summary) =>
                 _buildContent(context, summary, user.name),
@@ -48,8 +48,9 @@ class DashboardPage extends StatelessWidget {
           ),
           floatingActionButton: FloatingActionButton(
             heroTag: 'dash_fab',
+            backgroundColor: AppColors.primary,
             onPressed: () => context.go(AppConstants.routeAddExpense),
-            child: const Icon(Icons.add_rounded),
+            child: const Icon(Icons.add_rounded, color: Colors.white),
           ),
         );
       },
@@ -101,23 +102,60 @@ class DashboardPage extends StatelessWidget {
             backgroundColor: AppColors.background,
             floating: true,
             snap: true,
-            title: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+            expandedHeight: 0,
+            toolbarHeight: 72,
+            title: Row(
               children: [
-                Text(
-                  'Good ${_greeting()}, $userName 👋',
-                  style: AppTextStyles.titleMedium.copyWith(
-                    color: AppColors.textSecondary,
+                // Avatar
+                Container(
+                  width: 40,
+                  height: 40,
+                  decoration: BoxDecoration(
+                    gradient: AppColors.primaryGradient,
+                    shape: BoxShape.circle,
+                  ),
+                  child: Center(
+                    child: Text(
+                      userName.isNotEmpty ? userName[0].toUpperCase() : 'U',
+                      style: AppTextStyles.titleMedium.copyWith(
+                        color: Colors.white,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
                   ),
                 ),
-                Text('Dashboard', style: AppTextStyles.headlineSmall),
+                const SizedBox(width: 12),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      'Good ${_greeting()}',
+                      style: AppTextStyles.labelMedium.copyWith(
+                        color: AppColors.textSecondary,
+                      ),
+                    ),
+                    Text(
+                      userName,
+                      style: AppTextStyles.titleMedium,
+                    ),
+                  ],
+                ),
               ],
             ),
             actions: [
-              IconButton(
-                icon: const Icon(Icons.notifications_outlined),
-                color: AppColors.textSecondary,
-                onPressed: () {},
+              Container(
+                margin: const EdgeInsets.only(right: 12),
+                decoration: BoxDecoration(
+                  color: AppColors.surfaceVariant,
+                  shape: BoxShape.circle,
+                  border: Border.all(color: AppColors.border),
+                ),
+                child: IconButton(
+                  icon: const Icon(Icons.notifications_outlined, size: 20),
+                  color: AppColors.textSecondary,
+                  onPressed: () {},
+                ),
               ),
             ],
           ),
@@ -126,70 +164,53 @@ class DashboardPage extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                const SizedBox(height: 8),
+
                 // ── Spending hero card ─────────────────────────────────
                 _SpendingHeroCard(summary: summary),
-                const SizedBox(height: 24),
+                const SizedBox(height: 28),
+
+                // ── Quick stats row ────────────────────────────────────
+                _QuickStatsRow(summary: summary),
+                const SizedBox(height: 28),
 
                 // ── Category pie chart ─────────────────────────────────
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
-                  child: Text(
-                    'Spending by Category',
-                    style: AppTextStyles.titleLarge,
-                  ),
+                _SectionHeader(
+                  title: 'Spending by Category',
+                  subtitle: 'This month',
                 ),
                 const SizedBox(height: 12),
                 _CategoryPieChart(breakdown: summary.categoryBreakdown),
-                const SizedBox(height: 24),
+                const SizedBox(height: 28),
 
                 // ── Monthly trend ──────────────────────────────────────
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
-                  child: Text(
-                    'Monthly Trend',
-                    style: AppTextStyles.titleLarge,
-                  ),
+                _SectionHeader(
+                  title: 'Monthly Trend',
+                  subtitle: 'Last 6 months',
                 ),
                 const SizedBox(height: 12),
                 _MonthlyLineChart(trend: summary.monthlyTrend),
-                const SizedBox(height: 24),
+                const SizedBox(height: 28),
 
                 // ── Recent transactions ────────────────────────────────
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text('Recent', style: AppTextStyles.titleLarge),
-                      TextButton(
-                        onPressed: () =>
-                            context.go(AppConstants.routeExpenses),
-                        child: Text(
-                          'See all',
-                          style: AppTextStyles.labelMedium.copyWith(
-                            color: AppColors.primary,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
+                _SectionHeader(
+                  title: 'Recent',
+                  actionLabel: 'See all',
+                  onAction: () => context.go(AppConstants.routeExpenses),
                 ),
+                const SizedBox(height: 12),
                 if (summary.recentExpenses.isEmpty)
-                  const Padding(
-                    padding: EdgeInsets.all(24),
-                    child: Center(
-                      child: Text('No expenses yet — add your first one!'),
-                    ),
+                  _EmptyRecentTransactions(
+                    onAdd: () => context.go(AppConstants.routeAddExpense),
                   )
                 else
                   ...summary.recentExpenses.map(
                     (e) => ExpenseTile(
                       expense: e,
-                      onTap: () =>
-                          context.go('/expenses/${e.id}'),
+                      onTap: () => context.go('/expenses/${e.id}'),
                     ),
                   ),
-                const SizedBox(height: 80),
+                const SizedBox(height: 100),
               ],
             ),
           ),
@@ -206,6 +227,64 @@ class DashboardPage extends StatelessWidget {
   }
 }
 
+// ── Section Header ────────────────────────────────────────────────────────────
+
+class _SectionHeader extends StatelessWidget {
+  final String title;
+  final String? subtitle;
+  final String? actionLabel;
+  final VoidCallback? onAction;
+
+  const _SectionHeader({
+    required this.title,
+    this.subtitle,
+    this.actionLabel,
+    this.onAction,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        crossAxisAlignment: CrossAxisAlignment.end,
+        children: [
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(title, style: AppTextStyles.titleLarge),
+              if (subtitle != null)
+                Text(
+                  subtitle!,
+                  style: AppTextStyles.labelSmall,
+                ),
+            ],
+          ),
+          if (actionLabel != null && onAction != null)
+            GestureDetector(
+              onTap: onAction,
+              child: Container(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                decoration: BoxDecoration(
+                  color: AppColors.primary.withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: Text(
+                  actionLabel!,
+                  style: AppTextStyles.labelMedium.copyWith(
+                    color: AppColors.primary,
+                  ),
+                ),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+}
+
 // ── Spending Hero Card ────────────────────────────────────────────────────────
 
 class _SpendingHeroCard extends StatelessWidget {
@@ -217,47 +296,384 @@ class _SpendingHeroCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final isUp = summary.isIncreased;
     final changePct = summary.monthOverMonthChange.abs().toStringAsFixed(1);
+    final hasLastMonth = summary.totalLastMonth > 0;
 
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16),
-      padding: const EdgeInsets.all(24),
+      decoration: BoxDecoration(
+        gradient: const LinearGradient(
+          colors: [Color(0xFF0D9E6E), Color(0xFF0E7490)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(24),
+        boxShadow: [
+          BoxShadow(
+            color: AppColors.primary.withValues(alpha: 0.3),
+            blurRadius: 24,
+            offset: const Offset(0, 8),
+          ),
+        ],
+      ),
+      child: Stack(
+        children: [
+          // Decorative circles
+          Positioned(
+            right: -10,
+            top: -10,
+            child: Container(
+              width: 120,
+              height: 120,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: Colors.white.withValues(alpha: 0.06),
+              ),
+            ),
+          ),
+          Positioned(
+            right: 30,
+            bottom: -10,
+            child: Container(
+              width: 80,
+              height: 80,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: Colors.white.withValues(alpha: 0.06),
+              ),
+            ),
+          ),
+          // Content
+          Padding(
+            padding: const EdgeInsets.all(24),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      'This Month',
+                      style: AppTextStyles.labelMedium.copyWith(
+                        color: Colors.white.withValues(alpha: 0.75),
+                        letterSpacing: 0.8,
+                      ),
+                    ),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 10, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withValues(alpha: 0.15),
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      child: Text(
+                        _currentMonth(),
+                        style: AppTextStyles.labelSmall.copyWith(
+                          color: Colors.white,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 12),
+                Text(
+                  summary.totalThisMonth.inr,
+                  style: AppTextStyles.amountHero.copyWith(
+                    color: Colors.white,
+                    fontSize: 38,
+                  ),
+                ),
+                const SizedBox(height: 16),
+                Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 10, vertical: 5),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withValues(alpha: 0.15),
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            isUp
+                                ? Icons.arrow_upward_rounded
+                                : Icons.arrow_downward_rounded,
+                            color:
+                                isUp ? const Color(0xFFFCA5A5) : Colors.white,
+                            size: 14,
+                          ),
+                          const SizedBox(width: 4),
+                          Text(
+                            hasLastMonth
+                                ? '$changePct% vs last month'
+                                : 'First month tracked',
+                            style: AppTextStyles.labelSmall.copyWith(
+                              color:
+                                  isUp ? const Color(0xFFFCA5A5) : Colors.white,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const Spacer(),
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.end,
+                      children: [
+                        Text(
+                          'Last month',
+                          style: AppTextStyles.labelSmall.copyWith(
+                            color: Colors.white.withValues(alpha: 0.55),
+                          ),
+                        ),
+                        Text(
+                          summary.totalLastMonth.inr,
+                          style: AppTextStyles.amountSmall.copyWith(
+                            color: Colors.white.withValues(alpha: 0.75),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  String _currentMonth() {
+    final now = DateTime.now();
+    const months = [
+      'Jan',
+      'Feb',
+      'Mar',
+      'Apr',
+      'May',
+      'Jun',
+      'Jul',
+      'Aug',
+      'Sep',
+      'Oct',
+      'Nov',
+      'Dec'
+    ];
+    return '${months[now.month - 1]} ${now.year}';
+  }
+}
+
+// ── Quick Stats Row ───────────────────────────────────────────────────────────
+
+class _QuickStatsRow extends StatelessWidget {
+  final DashboardSummaryEntity summary;
+
+  const _QuickStatsRow({required this.summary});
+
+  @override
+  Widget build(BuildContext context) {
+    final txCount = summary.recentExpenses.length;
+    final topCategory = summary.categoryBreakdown.isNotEmpty
+        ? (summary.categoryBreakdown.entries.toList()
+              ..sort((a, b) => b.value.compareTo(a.value)))
+            .first
+            .key
+            .displayName
+        : '—';
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      child: Row(
+        children: [
+          Expanded(
+            child: _StatCard(
+              icon: Icons.receipt_long_rounded,
+              iconColor: AppColors.accent,
+              label: 'Transactions',
+              value: txCount.toString(),
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: _StatCard(
+              icon: Icons.category_rounded,
+              iconColor: AppColors.warning,
+              label: 'Top Category',
+              value: topCategory,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _StatCard extends StatelessWidget {
+  final IconData icon;
+  final Color iconColor;
+  final String label;
+  final String value;
+
+  const _StatCard({
+    required this.icon,
+    required this.iconColor,
+    required this.label,
+    required this.value,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: AppColors.cardBorder),
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 36,
+            height: 36,
+            decoration: BoxDecoration(
+              color: iconColor.withValues(alpha: 0.12),
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: Icon(icon, color: iconColor, size: 18),
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(label, style: AppTextStyles.labelSmall),
+                const SizedBox(height: 2),
+                Text(
+                  value,
+                  style: AppTextStyles.titleSmall,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ── Empty State Widget ────────────────────────────────────────────────────────
+
+class _ChartEmptyState extends StatelessWidget {
+  final IconData icon;
+  final String message;
+  final String hint;
+
+  const _ChartEmptyState({
+    required this.icon,
+    required this.message,
+    required this.hint,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 16),
+      padding: const EdgeInsets.symmetric(vertical: 36, horizontal: 24),
       decoration: BoxDecoration(
         color: AppColors.surface,
         borderRadius: BorderRadius.circular(20),
         border: Border.all(color: AppColors.cardBorder),
       ),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
         children: [
-          Text(
-            'This Month',
-            style: AppTextStyles.labelMedium.copyWith(
-              color: AppColors.textSecondary,
+          Container(
+            width: 56,
+            height: 56,
+            decoration: BoxDecoration(
+              color: AppColors.surfaceVariant,
+              shape: BoxShape.circle,
             ),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            summary.totalThisMonth.inr,
-            style: AppTextStyles.amountHero,
+            child: Icon(icon, color: AppColors.textDisabled, size: 26),
           ),
           const SizedBox(height: 12),
-          Row(
-            children: [
-              Icon(
-                isUp
-                    ? Icons.arrow_upward_rounded
-                    : Icons.arrow_downward_rounded,
-                color: isUp ? AppColors.expense : AppColors.primary,
-                size: 16,
+          Text(
+            message,
+            style: AppTextStyles.titleSmall.copyWith(
+              color: AppColors.textSecondary,
+            ),
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: 4),
+          Text(
+            hint,
+            style: AppTextStyles.bodySmall,
+            textAlign: TextAlign.center,
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _EmptyRecentTransactions extends StatelessWidget {
+  final VoidCallback onAdd;
+
+  const _EmptyRecentTransactions({required this.onAdd});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 16),
+      padding: const EdgeInsets.symmetric(vertical: 36, horizontal: 24),
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: AppColors.cardBorder),
+      ),
+      child: Column(
+        children: [
+          Container(
+            width: 60,
+            height: 60,
+            decoration: BoxDecoration(
+              gradient: AppColors.primaryGradient,
+              shape: BoxShape.circle,
+            ),
+            child: const Icon(Icons.receipt_long_rounded,
+                color: Colors.white, size: 28),
+          ),
+          const SizedBox(height: 16),
+          Text(
+            'No expenses yet',
+            style: AppTextStyles.titleMedium,
+          ),
+          const SizedBox(height: 6),
+          Text(
+            'Start tracking by adding your first expense',
+            style: AppTextStyles.bodySmall,
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: 20),
+          GestureDetector(
+            onTap: onAdd,
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 10),
+              decoration: BoxDecoration(
+                gradient: AppColors.primaryGradient,
+                borderRadius: BorderRadius.circular(24),
               ),
-              const SizedBox(width: 4),
-              Text(
-                '$changePct% vs last month',
-                style: AppTextStyles.bodySmall.copyWith(
-                  color: isUp ? AppColors.expense : AppColors.primary,
+              child: Text(
+                'Add Expense',
+                style: AppTextStyles.labelMedium.copyWith(
+                  color: Colors.white,
+                  fontWeight: FontWeight.w600,
                 ),
               ),
-            ],
+            ),
           ),
         ],
       ),
@@ -282,7 +698,11 @@ class _CategoryPieChartState extends State<_CategoryPieChart> {
   @override
   Widget build(BuildContext context) {
     if (widget.breakdown.isEmpty) {
-      return const SizedBox(height: 200);
+      return const _ChartEmptyState(
+        icon: Icons.pie_chart_outline_rounded,
+        message: 'No spending data yet',
+        hint: 'Add expenses to see your category breakdown',
+      );
     }
 
     final total = widget.breakdown.values.fold(0.0, (s, v) => s + v);
@@ -298,67 +718,88 @@ class _CategoryPieChartState extends State<_CategoryPieChart> {
       return PieChartSectionData(
         value: entry.value,
         color: _categoryColor(entry.key),
-        radius: isTouched ? 60 : 52,
+        radius: isTouched ? 65 : 54,
         title: isTouched ? '${pct.toStringAsFixed(0)}%' : '',
         titleStyle: AppTextStyles.labelSmall.copyWith(
           color: Colors.white,
           fontWeight: FontWeight.w700,
+          fontSize: 12,
         ),
       );
     }).toList();
 
-    return SizedBox(
-      height: 220,
-      child: Row(
-        children: [
-          Expanded(
-            child: PieChart(
-              PieChartData(
-                sections: sections,
-                centerSpaceRadius: 40,
-                sectionsSpace: 2,
-                pieTouchData: PieTouchData(
-                  touchCallback: (event, response) {
-                    setState(() {
-                      _touchedIndex = response?.touchedSection
-                              ?.touchedSectionIndex ??
-                          -1;
-                    });
-                  },
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 16),
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: AppColors.cardBorder),
+      ),
+      child: SizedBox(
+        height: 200,
+        child: Row(
+          children: [
+            Expanded(
+              child: PieChart(
+                PieChartData(
+                  sections: sections,
+                  centerSpaceRadius: 36,
+                  sectionsSpace: 2,
+                  pieTouchData: PieTouchData(
+                    touchCallback: (event, response) {
+                      setState(() {
+                        _touchedIndex =
+                            response?.touchedSection?.touchedSectionIndex ?? -1;
+                      });
+                    },
+                  ),
                 ),
               ),
             ),
-          ),
-          const SizedBox(width: 8),
-          Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: entries.take(5).map((e) {
-              return Padding(
-                padding: const EdgeInsets.symmetric(vertical: 3),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Container(
-                      width: 8,
-                      height: 8,
-                      decoration: BoxDecoration(
-                        color: _categoryColor(e.key),
-                        shape: BoxShape.circle,
+            const SizedBox(width: 16),
+            Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: entries.take(6).map((e) {
+                final pct = total > 0
+                    ? (e.value / total * 100).toStringAsFixed(0)
+                    : '0';
+                return Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 4),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Container(
+                        width: 8,
+                        height: 8,
+                        decoration: BoxDecoration(
+                          color: _categoryColor(e.key),
+                          shape: BoxShape.circle,
+                        ),
                       ),
-                    ),
-                    const SizedBox(width: 6),
-                    Text(
-                      e.key.displayName,
-                      style: AppTextStyles.labelSmall,
-                    ),
-                  ],
-                ),
-              );
-            }).toList(),
-          ),
-          const SizedBox(width: 16),
-        ],
+                      const SizedBox(width: 8),
+                      Text(
+                        e.key.displayName,
+                        style: AppTextStyles.labelSmall.copyWith(
+                          color: AppColors.textSecondary,
+                        ),
+                      ),
+                      const SizedBox(width: 4),
+                      Text(
+                        '$pct%',
+                        style: AppTextStyles.labelSmall.copyWith(
+                          color: AppColors.textPrimary,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ],
+                  ),
+                );
+              }).toList(),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -385,26 +826,42 @@ class _MonthlyLineChart extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    if (trend.isEmpty) return const SizedBox(height: 160);
+    if (trend.isEmpty) {
+      return const _ChartEmptyState(
+        icon: Icons.show_chart_rounded,
+        message: 'No trend data yet',
+        hint: 'Your spending trend will appear here after a few months',
+      );
+    }
 
-    final spots = trend.asMap().entries
+    final spots = trend
+        .asMap()
+        .entries
         .map((e) => FlSpot(e.key.toDouble(), e.value.total))
         .toList();
 
-    final maxY = trend.map((t) => t.total).reduce((a, b) => a > b ? a : b);
+    final maxY = trend.map((t) => t.total).reduce(math.max);
 
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16),
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.fromLTRB(16, 20, 16, 8),
       decoration: BoxDecoration(
         color: AppColors.surface,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(20),
         border: Border.all(color: AppColors.cardBorder),
       ),
-      height: 180,
+      height: 200,
       child: LineChart(
         LineChartData(
-          gridData: const FlGridData(show: false),
+          gridData: FlGridData(
+            show: true,
+            drawVerticalLine: false,
+            horizontalInterval: maxY / 4,
+            getDrawingHorizontalLine: (val) => FlLine(
+              color: AppColors.cardBorder,
+              strokeWidth: 1,
+            ),
+          ),
           titlesData: FlTitlesData(
             bottomTitles: AxisTitles(
               sideTitles: SideTitles(
@@ -412,12 +869,15 @@ class _MonthlyLineChart extends StatelessWidget {
                 getTitlesWidget: (val, meta) {
                   final i = val.toInt();
                   if (i < 0 || i >= trend.length) return const SizedBox();
-                  return Text(
-                    trend[i].month.shortMonth,
-                    style: AppTextStyles.labelSmall,
+                  return Padding(
+                    padding: const EdgeInsets.only(top: 6),
+                    child: Text(
+                      trend[i].month.shortMonth,
+                      style: AppTextStyles.labelSmall,
+                    ),
                   );
                 },
-                reservedSize: 24,
+                reservedSize: 28,
               ),
             ),
             leftTitles: const AxisTitles(
@@ -434,18 +894,33 @@ class _MonthlyLineChart extends StatelessWidget {
           minX: 0,
           maxX: (trend.length - 1).toDouble(),
           minY: 0,
-          maxY: maxY * 1.2,
+          maxY: maxY * 1.25,
           lineBarsData: [
             LineChartBarData(
               spots: spots,
               isCurved: true,
-              curveSmoothness: 0.35,
+              curveSmoothness: 0.4,
               color: AppColors.primary,
               barWidth: 2.5,
-              dotData: const FlDotData(show: false),
+              dotData: FlDotData(
+                show: true,
+                getDotPainter: (spot, pct, bar, idx) => FlDotCirclePainter(
+                  radius: 3.5,
+                  color: AppColors.primary,
+                  strokeColor: AppColors.surface,
+                  strokeWidth: 2,
+                ),
+              ),
               belowBarData: BarAreaData(
                 show: true,
-                color: AppColors.primary.withOpacity(0.08),
+                gradient: LinearGradient(
+                  colors: [
+                    AppColors.primary.withValues(alpha: 0.18),
+                    AppColors.primary.withValues(alpha: 0.0),
+                  ],
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                ),
               ),
             ),
           ],

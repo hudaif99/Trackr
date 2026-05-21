@@ -75,7 +75,11 @@ class DashboardRemoteDataSource {
         categoryBreakdown: breakdown,
         monthlyTrend: trend,
       );
-    } catch (e) {
+    } catch (e, stack) {
+      print('--- FIRESTORE INDEX ERROR ---');
+      print('Firebase provides a direct link to create the missing index:');
+      print(e.toString());
+      print('-----------------------------');
       throw ServerException('Failed to load dashboard: ${e.toString()}');
     }
   }

@@ -120,6 +120,7 @@ class AnalyticsBloc extends Bloc<AnalyticsEvent, AnalyticsState> {
           .where('userId', isEqualTo: event.userId)
           .where('date',
               isGreaterThanOrEqualTo: Timestamp.fromDate(sixMonthsAgo))
+          .orderBy('date', descending: true)
           .get();
 
       final expenses = snap.docs
@@ -133,6 +134,15 @@ class AnalyticsBloc extends Bloc<AnalyticsEvent, AnalyticsState> {
 
       emit(AnalyticsLoaded(_buildSummary(expenses, now)));
     } catch (e) {
+      // ── INDEX ERROR HELPER ─────────────────────────────────────────────────
+      // If this is a Firestore index error, Firebase prints a direct URL below
+      // that auto-creates the missing index. Copy-paste it into your browser.
+      // ignore: avoid_print
+      print('\n══════════ FIRESTORE ERROR [AnalyticsBloc] ══════════');
+      // ignore: avoid_print
+      print(e.toString());
+      // ignore: avoid_print
+      print('═════════════════════════════════════════════════════\n');
       emit(AnalyticsError('Failed to load analytics: ${e.toString()}'));
     }
   }

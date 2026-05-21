@@ -82,7 +82,7 @@ class _AddExpensePageState extends State<AddExpensePage> {
         BlocListener<ExpenseFormBloc, ExpenseFormState>(
           listener: (context, state) {
             if (state is ExpenseFormSuccess) {
-              context.pop();
+              context.go(AppConstants.routeExpenses);
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(
                   content: const Text('Expense added ✓'),
@@ -115,7 +115,7 @@ class _AddExpensePageState extends State<AddExpensePage> {
           title: const Text('Add Expense'),
           leading: IconButton(
             icon: const Icon(Icons.close_rounded),
-            onPressed: () => context.pop(),
+            onPressed: () => context.go(AppConstants.routeExpenses),
           ),
         ),
         body: Form(
@@ -163,9 +163,10 @@ class _AddExpensePageState extends State<AddExpensePage> {
               const SizedBox(height: 20),
 
               // ── Category chips ─────────────────────────────────────────
-              Text('Category', style: AppTextStyles.labelMedium.copyWith(
-                color: AppColors.textSecondary,
-              )),
+              Text('Category',
+                  style: AppTextStyles.labelMedium.copyWith(
+                    color: AppColors.textSecondary,
+                  )),
               const SizedBox(height: 8),
               Wrap(
                 spacing: 8,
@@ -182,7 +183,8 @@ class _AddExpensePageState extends State<AddExpensePage> {
                       color: selected ? AppColors.primary : AppColors.border,
                     ),
                     labelStyle: AppTextStyles.labelMedium.copyWith(
-                      color: selected ? AppColors.primary : AppColors.textPrimary,
+                      color:
+                          selected ? AppColors.primary : AppColors.textPrimary,
                     ),
                   );
                 }).toList(),
@@ -190,16 +192,17 @@ class _AddExpensePageState extends State<AddExpensePage> {
               const SizedBox(height: 20),
 
               // ── Date ───────────────────────────────────────────────────
-              Text('Date', style: AppTextStyles.labelMedium.copyWith(
-                color: AppColors.textSecondary,
-              )),
+              Text('Date',
+                  style: AppTextStyles.labelMedium.copyWith(
+                    color: AppColors.textSecondary,
+                  )),
               const SizedBox(height: 8),
               InkWell(
                 borderRadius: BorderRadius.circular(12),
                 onTap: _pickDate,
                 child: Container(
-                  padding: const EdgeInsets.symmetric(
-                      horizontal: 16, vertical: 14),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
                   decoration: BoxDecoration(
                     color: AppColors.surfaceVariant,
                     borderRadius: BorderRadius.circular(12),
@@ -221,9 +224,10 @@ class _AddExpensePageState extends State<AddExpensePage> {
               const SizedBox(height: 20),
 
               // ── Payment method ─────────────────────────────────────────
-              Text('Payment Method', style: AppTextStyles.labelMedium.copyWith(
-                color: AppColors.textSecondary,
-              )),
+              Text('Payment Method',
+                  style: AppTextStyles.labelMedium.copyWith(
+                    color: AppColors.textSecondary,
+                  )),
               const SizedBox(height: 8),
               Wrap(
                 spacing: 8,
@@ -238,7 +242,8 @@ class _AddExpensePageState extends State<AddExpensePage> {
                       color: selected ? AppColors.accent : AppColors.border,
                     ),
                     labelStyle: AppTextStyles.labelMedium.copyWith(
-                      color: selected ? AppColors.accent : AppColors.textPrimary,
+                      color:
+                          selected ? AppColors.accent : AppColors.textPrimary,
                     ),
                   );
                 }).toList(),
@@ -316,7 +321,18 @@ class _AddExpensePageState extends State<AddExpensePage> {
   }
 
   String _monthName(int m) => [
-        '', 'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-        'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
+        '',
+        'Jan',
+        'Feb',
+        'Mar',
+        'Apr',
+        'May',
+        'Jun',
+        'Jul',
+        'Aug',
+        'Sep',
+        'Oct',
+        'Nov',
+        'Dec'
       ][m];
 }

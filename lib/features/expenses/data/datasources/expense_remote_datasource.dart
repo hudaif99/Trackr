@@ -23,20 +23,24 @@ class ExpenseRemoteDataSource {
     int limit = 50,
   }) async {
     try {
-      Query<Map<String, dynamic>> query = _collection
-          .where('userId', isEqualTo: userId)
-          .orderBy('date', descending: true)
-          .limit(limit);
+      // Build all where() clauses BEFORE orderBy() — Firestore requires this
+      // order to avoid the failed-precondition / missing composite-index error.
+      Query<Map<String, dynamic>> query =
+          _collection.where('userId', isEqualTo: userId);
 
       if (category != null) {
         query = query.where('category', isEqualTo: category);
       }
       if (from != null) {
-        query = query.where('date', isGreaterThanOrEqualTo: Timestamp.fromDate(from));
+        query = query.where(
+            'date', isGreaterThanOrEqualTo: Timestamp.fromDate(from));
       }
       if (to != null) {
-        query = query.where('date', isLessThanOrEqualTo: Timestamp.fromDate(to));
+        query =
+            query.where('date', isLessThanOrEqualTo: Timestamp.fromDate(to));
       }
+
+      query = query.orderBy('date', descending: true).limit(limit);
 
       final snapshot = await query.get();
       return snapshot.docs
@@ -44,6 +48,15 @@ class ExpenseRemoteDataSource {
               doc as DocumentSnapshot<Map<String, dynamic>>))
           .toList();
     } catch (e) {
+      // ── INDEX ERROR HELPER ─────────────────────────────────────────────────
+      // If this is a Firestore index error, Firebase prints a direct URL below
+      // that auto-creates the missing index. Copy-paste it into your browser.
+      // ignore: avoid_print
+      print('\n══════════ FIRESTORE ERROR [getExpenses] ══════════');
+      // ignore: avoid_print
+      print(e.toString());
+      // ignore: avoid_print
+      print('═══════════════════════════════════════════════════\n');
       throw ServerException('Failed to fetch expenses: ${e.toString()}');
     }
   }
