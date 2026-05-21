@@ -81,6 +81,9 @@ void configureDependencies() {
   getIt.registerLazySingleton<LogoutUseCase>(
     () => LogoutUseCase(getIt<AuthRepository>()),
   );
+  getIt.registerLazySingleton<SendPasswordResetEmailUseCase>(
+    () => SendPasswordResetEmailUseCase(getIt<AuthRepository>()),
+  );
 
   getIt.registerFactory<AuthBloc>(
     () => AuthBloc(
@@ -89,6 +92,7 @@ void configureDependencies() {
       register: getIt<RegisterUseCase>(),
       googleSignIn: getIt<GoogleSignInUseCase>(),
       logout: getIt<LogoutUseCase>(),
+      sendPasswordResetEmail: getIt<SendPasswordResetEmailUseCase>(),
     ),
   );
 

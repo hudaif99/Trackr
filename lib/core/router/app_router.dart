@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:fluxo/core/theme/app_colors.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
@@ -12,6 +13,7 @@ import '../../../features/ai/presentation/bloc/ai_categorization_cubit.dart';
 import '../../../features/auth/presentation/bloc/auth_bloc.dart';
 import '../../../features/auth/presentation/pages/login_page.dart';
 import '../../../features/auth/presentation/pages/register_page.dart';
+import '../../../features/auth/presentation/pages/forgot_password_page.dart';
 import '../../../features/auth/presentation/pages/splash_page.dart';
 import '../../../features/analytics/presentation/bloc/analytics_bloc.dart';
 import '../../../features/analytics/presentation/pages/analytics_page.dart';
@@ -42,9 +44,11 @@ class AppRouter {
 
         // ── Auth redirect ──────────────────────────────────────────────────
         final isAuthenticated = authState is AuthAuthenticated;
-        final isAuthRoute = location.startsWith('/auth');
-        final isSplash = location == '/';
-        final isOnboarding = location == '/onboarding';
+        final isAuthRoute = location == AppConstants.routeLogin ||
+            location == AppConstants.routeRegister ||
+            location == '/forgot-password';
+        final isSplash = location == AppConstants.routeSplash;
+        final isOnboarding = location == AppConstants.routeOnboarding;
 
         if (!isAuthenticated && !isAuthRoute && !isSplash && !isOnboarding) {
           // Check onboarding
@@ -83,6 +87,10 @@ class AppRouter {
         GoRoute(
           path: AppConstants.routeRegister,
           builder: (_, __) => const RegisterPage(),
+        ),
+        GoRoute(
+          path: '/forgot-password',
+          builder: (_, __) => const ForgotPasswordPage(),
         ),
 
         // ── Shell (bottom nav) ────────────────────────────────────────────
@@ -138,11 +146,18 @@ class AppRouter {
   }
 }
 
-/// Shell scaffold with bottom navigation bar.
-class _ShellScaffold extends StatelessWidget {
+/// Shell scaffold with bottom navigation bar and double-tap to exit.
+class _ShellScaffold extends StatefulWidget {
   final Widget child;
 
   const _ShellScaffold({required this.child});
+
+  @override
+  State<_ShellScaffold> createState() => _ShellScaffoldState();
+}
+
+class _ShellScaffoldState extends State<_ShellScaffold> {
+  DateTime? _lastBackPressTime;
 
   @override
   Widget build(BuildContext context) {
@@ -157,44 +172,79 @@ class _ShellScaffold extends StatelessWidget {
           final location = GoRouterState.of(context).matchedLocation;
           final index = _indexFromLocation(location);
 
-          return Scaffold(
-            body: child,
-            floatingActionButton: FloatingActionButton(
-              heroTag: 'shell_fab',
-              backgroundColor: AppColors.primary,
-              onPressed: () => context.go(AppConstants.routeAddExpense),
-              child: const FaIcon(FontAwesomeIcons.plus,
-                  color: Colors.white, size: 20),
-            ),
-            bottomNavigationBar: NavigationBar(
-              selectedIndex: index,
-              onDestinationSelected: (i) {
-                switch (i) {
-                  case 0:
+          return PopScope(
+            canPop: false,
+            onPopInvokedWithResult: (didPop, result) {
+              if (didPop) return;
+
+              if (index != 0) {
+                // If not on the Home tab, pressing back goes to Home
+                WidgetsBinding.instance.addPostFrameCallback((_) {
+                  if (context.mounted) {
                     context.go(AppConstants.routeDashboard);
-                  case 1:
-                    context.go(AppConstants.routeExpenses);
-                  case 2:
-                    context.go(AppConstants.routeAnalytics);
-                }
-              },
-              destinations: const [
-                NavigationDestination(
-                  icon: FaIcon(FontAwesomeIcons.house, size: 18),
-                  selectedIcon: FaIcon(FontAwesomeIcons.house, size: 18),
-                  label: 'Home',
-                ),
-                NavigationDestination(
-                  icon: FaIcon(FontAwesomeIcons.receipt, size: 18),
-                  selectedIcon: FaIcon(FontAwesomeIcons.receipt, size: 18),
-                  label: 'Expenses',
-                ),
-                NavigationDestination(
-                  icon: FaIcon(FontAwesomeIcons.chartLine, size: 18),
-                  selectedIcon: FaIcon(FontAwesomeIcons.chartLine, size: 18),
-                  label: 'Analytics',
-                ),
-              ],
+                  }
+                });
+                return;
+              }
+
+              // Double-tap to exit from Home tab
+              final now = DateTime.now();
+              if (_lastBackPressTime == null ||
+                  now.difference(_lastBackPressTime!) >
+                      const Duration(seconds: 2)) {
+                _lastBackPressTime = now;
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('Press back again to exit'),
+                    duration: Duration(seconds: 2),
+                    behavior: SnackBarBehavior.floating,
+                  ),
+                );
+              } else {
+                WidgetsBinding.instance.addPostFrameCallback((_) {
+                  SystemNavigator.pop();
+                });
+              }
+            },
+            child: Scaffold(
+              body: widget.child,
+              floatingActionButton: FloatingActionButton(
+                heroTag: 'shell_fab',
+                backgroundColor: AppColors.primary,
+                onPressed: () => context.push(AppConstants.routeAddExpense),
+                child: const FaIcon(FontAwesomeIcons.plus,
+                    color: Colors.white, size: 20),
+              ),
+              bottomNavigationBar: NavigationBar(
+                selectedIndex: index,
+                onDestinationSelected: (i) {
+                  switch (i) {
+                    case 0:
+                      context.go(AppConstants.routeDashboard);
+                    case 1:
+                      context.go(AppConstants.routeExpenses);
+                    case 2:
+                      context.go(AppConstants.routeAnalytics);
+                  }
+                },
+                destinations: const [
+                  NavigationDestination(
+                    icon: FaIcon(FontAwesomeIcons.house, size: 18),
+                    selectedIcon: FaIcon(FontAwesomeIcons.house, size: 18),
+                    label: 'Home',
+                  ),
+                  NavigationDestination(
+                    icon: FaIcon(FontAwesomeIcons.receipt, size: 18),
+                    selectedIcon: FaIcon(FontAwesomeIcons.receipt, size: 18),
+                    label: 'Expenses',
+                  ),
+                  NavigationDestination(
+                    icon: FaIcon(FontAwesomeIcons.chartLine, size: 18),
+                    selectedIcon: FaIcon(FontAwesomeIcons.chartLine, size: 18),
+                    label: 'Analytics',
+                  ),
+                ],
+              ),
             ),
           );
         },

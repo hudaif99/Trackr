@@ -52,6 +52,16 @@ final class AuthLogoutRequested extends AuthEvent {
   const AuthLogoutRequested();
 }
 
+/// Request a password reset email.
+final class AuthPasswordResetRequested extends AuthEvent {
+  final String email;
+
+  const AuthPasswordResetRequested(this.email);
+
+  @override
+  List<Object?> get props => [email];
+}
+
 // ── States ─────────────────────────────────────────────────────────────────
 
 sealed class AuthState extends Equatable {
@@ -94,4 +104,9 @@ final class AuthError extends AuthState {
 
   @override
   List<Object?> get props => [message];
+}
+
+/// Password reset email sent successfully.
+final class AuthPasswordResetSuccess extends AuthState {
+  const AuthPasswordResetSuccess();
 }

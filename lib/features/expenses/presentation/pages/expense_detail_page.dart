@@ -27,7 +27,13 @@ class ExpenseDetailPage extends StatelessWidget {
             backgroundColor: AppColors.background,
             leading: IconButton(
               icon: const FaIcon(FontAwesomeIcons.arrowLeft, size: 18),
-              onPressed: () => context.go(AppConstants.routeExpenses),
+              onPressed: () {
+                if (context.canPop()) {
+                  context.pop();
+                } else {
+                  context.go(AppConstants.routeDashboard);
+                }
+              },
             ),
             flexibleSpace: FlexibleSpaceBar(
               background: _HeroHeader(expense: expense),

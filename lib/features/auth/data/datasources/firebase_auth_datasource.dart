@@ -106,6 +106,17 @@ class FirebaseAuthDataSource {
     }
   }
 
+  // ── Password Reset ────────────────────────────────────────────────────────
+  Future<void> sendPasswordResetEmail({required String email}) async {
+    try {
+      await _auth.sendPasswordResetEmail(email: email.trim());
+    } on FirebaseAuthException catch (e) {
+      throw AuthException(_mapAuthError(e.code));
+    } catch (e) {
+      throw AuthException('Failed to send reset link. Please try again.');
+    }
+  }
+
   // ── Logout ────────────────────────────────────────────────────────────────
   Future<void> logout() async {
     await Future.wait([
@@ -140,6 +151,7 @@ class FirebaseAuthDataSource {
   }
 
   String _mapAuthError(String code) => switch (code) {
+        'invalid-credential' => 'Invalid email or password.',
         'user-not-found' => 'No account found with this email.',
         'wrong-password' => 'Incorrect password.',
         'email-already-in-use' => 'An account already exists for this email.',

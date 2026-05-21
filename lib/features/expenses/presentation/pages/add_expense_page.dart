@@ -83,7 +83,11 @@ class _AddExpensePageState extends State<AddExpensePage> {
         BlocListener<ExpenseFormBloc, ExpenseFormState>(
           listener: (context, state) {
             if (state is ExpenseFormSuccess) {
-              context.go(AppConstants.routeExpenses);
+              if (context.canPop()) {
+                context.pop();
+              } else {
+                context.go(AppConstants.routeDashboard);
+              }
               ScaffoldMessenger.of(context).showSnackBar(
                 const SnackBar(
                   content: Text('Expense added ✓'),
@@ -116,7 +120,13 @@ class _AddExpensePageState extends State<AddExpensePage> {
           title: const Text('Add Expense'),
           leading: IconButton(
             icon: const FaIcon(FontAwesomeIcons.xmark, size: 18),
-            onPressed: () => context.go(AppConstants.routeExpenses),
+            onPressed: () {
+              if (context.canPop()) {
+                context.pop();
+              } else {
+                context.go(AppConstants.routeDashboard);
+              }
+            },
           ),
         ),
         body: Form(

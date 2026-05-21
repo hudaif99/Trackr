@@ -73,7 +73,7 @@ class ExpenseListPage extends StatelessWidget {
             ),
             floatingActionButton: FloatingActionButton(
               heroTag: 'expense_fab',
-              onPressed: () => context.go(AppConstants.routeAddExpense),
+              onPressed: () => context.push(AppConstants.routeAddExpense),
               child: const FaIcon(FontAwesomeIcons.plus, size: 18),
             ),
           ),
@@ -83,9 +83,7 @@ class ExpenseListPage extends StatelessWidget {
   }
 
   Widget _initLoad(BuildContext context, String userId) {
-    context
-        .read<ExpenseListBloc>()
-        .add(ExpensesLoadRequested(userId: userId));
+    context.read<ExpenseListBloc>().add(ExpensesLoadRequested(userId: userId));
     return _skeleton();
   }
 
@@ -113,7 +111,7 @@ class ExpenseListPage extends StatelessWidget {
             final expense = expenses[i - 1];
             return ExpenseTile(
               expense: expense,
-              onTap: () => ctx.go('/expenses/${expense.id}', extra: expense),
+              onTap: () => ctx.push('/expenses/${expense.id}', extra: expense),
             );
           },
         ),

@@ -15,6 +15,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
   final RegisterUseCase _register;
   final GoogleSignInUseCase _googleSignIn;
   final LogoutUseCase _logout;
+  final SendPasswordResetEmailUseCase _sendPasswordResetEmail;
 
   AuthBloc({
     required GetCurrentUserUseCase getCurrentUser,
@@ -22,17 +23,20 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     required RegisterUseCase register,
     required GoogleSignInUseCase googleSignIn,
     required LogoutUseCase logout,
+    required SendPasswordResetEmailUseCase sendPasswordResetEmail,
   })  : _getCurrentUser = getCurrentUser,
         _login = login,
         _register = register,
         _googleSignIn = googleSignIn,
         _logout = logout,
+        _sendPasswordResetEmail = sendPasswordResetEmail,
         super(const AuthInitial()) {
     on<AuthCheckRequested>(_onCheckRequested);
     on<AuthLoginRequested>(_onLoginRequested);
     on<AuthRegisterRequested>(_onRegisterRequested);
     on<AuthGoogleSignInRequested>(_onGoogleSignIn);
     on<AuthLogoutRequested>(_onLogout);
+    on<AuthPasswordResetRequested>(_onPasswordReset);
   }
 
   Future<void> _onCheckRequested(
@@ -103,6 +107,22 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     Emitter<AuthState> emit,
   ) async {
     await _logout();
+    emit(const AuthUnauthenticated());
+  }
+
+  Future<void> _onPasswordReset(
+    AuthPasswordResetRequested event,
+    Emitter<AuthState> emit,
+  ) async {
+    emit(const AuthLoading());
+    final failure = await _sendPasswordResetEmail(email: event.email);
+    if (failure != null) {
+      emit(AuthError(failure.message));
+      return;
+    }
+    emit(const AuthPasswordResetSuccess());
+    // Since we don't want to leave the state as AuthPasswordResetSuccess indefinitely,
+    // we revert back to unauthenticated (since they are resetting their password, they are likely not logged in)
     emit(const AuthUnauthenticated());
   }
 }

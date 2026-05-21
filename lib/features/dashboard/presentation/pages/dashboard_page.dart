@@ -147,16 +147,38 @@ class DashboardPage extends StatelessWidget {
             ),
             actions: [
               Container(
-                margin: const EdgeInsets.only(right: 12),
+                margin: const EdgeInsets.only(right: 16),
                 decoration: BoxDecoration(
                   color: AppColors.surfaceVariant,
                   shape: BoxShape.circle,
                   border: Border.all(color: AppColors.border),
                 ),
                 child: IconButton(
-                  icon: const FaIcon(FontAwesomeIcons.bell, size: 18),
-                  color: AppColors.textSecondary,
-                  onPressed: () {},
+                  icon: const FaIcon(FontAwesomeIcons.arrowRightFromBracket, size: 16),
+                  color: AppColors.expense,
+                  onPressed: () {
+                    showDialog(
+                      context: context,
+                      builder: (context) => AlertDialog(
+                        backgroundColor: AppColors.surface,
+                        title: const Text('Log Out'),
+                        content: const Text('Are you sure you want to log out?'),
+                        actions: [
+                          TextButton(
+                            onPressed: () => Navigator.pop(context),
+                            child: const Text('Cancel', style: TextStyle(color: AppColors.textSecondary)),
+                          ),
+                          TextButton(
+                            onPressed: () {
+                              Navigator.pop(context);
+                              context.read<AuthBloc>().add(const AuthLogoutRequested());
+                            },
+                            child: const Text('Logout', style: TextStyle(color: AppColors.expense)),
+                          ),
+                        ],
+                      ),
+                    );
+                  },
                 ),
               ),
             ],
@@ -209,7 +231,7 @@ class DashboardPage extends StatelessWidget {
                   ...summary.recentExpenses.map(
                     (e) => ExpenseTile(
                       expense: e,
-                      onTap: () => context.go('/expenses/${e.id}', extra: e),
+                      onTap: () => context.push('/expenses/${e.id}', extra: e),
                     ),
                   ),
                 const SizedBox(height: 100),
@@ -397,13 +419,13 @@ class _SpendingHeroCard extends StatelessWidget {
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          Icon(
+                          FaIcon(
                             isUp
-                                ? Icons.arrow_upward_rounded
-                                : Icons.arrow_downward_rounded,
+                                ? FontAwesomeIcons.arrowUp
+                                : FontAwesomeIcons.arrowDown,
                             color:
                                 isUp ? const Color(0xFFFCA5A5) : Colors.white,
-                            size: 14,
+                            size: 12,
                           ),
                           const SizedBox(width: 4),
                           Text(
@@ -490,7 +512,7 @@ class _QuickStatsRow extends StatelessWidget {
         children: [
           Expanded(
             child: _StatCard(
-              icon: Icons.receipt_long_rounded,
+              icon: FontAwesomeIcons.receipt,
               iconColor: AppColors.accent,
               label: 'Transactions',
               value: txCount.toString(),
@@ -499,7 +521,7 @@ class _QuickStatsRow extends StatelessWidget {
           const SizedBox(width: 12),
           Expanded(
             child: _StatCard(
-              icon: Icons.category_rounded,
+              icon: FontAwesomeIcons.tag,
               iconColor: AppColors.warning,
               label: 'Top Category',
               value: topCategory,
@@ -538,11 +560,12 @@ class _StatCard extends StatelessWidget {
           Container(
             width: 36,
             height: 36,
+            alignment: Alignment.center,
             decoration: BoxDecoration(
               color: iconColor.withValues(alpha: 0.12),
               borderRadius: BorderRadius.circular(10),
             ),
-            child: Icon(icon, color: iconColor, size: 18),
+            child: FaIcon(icon, color: iconColor, size: 16),
           ),
           const SizedBox(width: 10),
           Expanded(
@@ -595,11 +618,12 @@ class _ChartEmptyState extends StatelessWidget {
           Container(
             width: 56,
             height: 56,
+            alignment: Alignment.center,
             decoration: BoxDecoration(
               color: AppColors.surfaceVariant,
               shape: BoxShape.circle,
             ),
-            child: Icon(icon, color: AppColors.textDisabled, size: 26),
+            child: FaIcon(icon, color: AppColors.textDisabled, size: 24),
           ),
           const SizedBox(height: 12),
           Text(
@@ -641,12 +665,13 @@ class _EmptyRecentTransactions extends StatelessWidget {
           Container(
             width: 60,
             height: 60,
+            alignment: Alignment.center,
             decoration: BoxDecoration(
               gradient: AppColors.primaryGradient,
               shape: BoxShape.circle,
             ),
-            child: const Icon(Icons.receipt_long_rounded,
-                color: Colors.white, size: 28),
+            child: const FaIcon(FontAwesomeIcons.receipt,
+                color: Colors.white, size: 24),
           ),
           const SizedBox(height: 16),
           Text(

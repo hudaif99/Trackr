@@ -28,6 +28,9 @@ abstract class AuthRepository {
   /// Signs out the current user.
   Future<Failure?> logout();
 
+  /// Sends a password reset email to the given address.
+  Future<Failure?> sendPasswordResetEmail({required String email});
+
   /// Stream of auth state changes — emits the user or null.
   Stream<UserEntity?> get authStateChanges;
 }

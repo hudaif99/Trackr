@@ -8,6 +8,7 @@ import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/widgets/app_button.dart';
 import '../../../../core/widgets/app_text_field.dart';
 import '../bloc/auth_bloc.dart';
+import '../widgets/auth_background.dart';
 
 /// Registration screen for new accounts.
 class RegisterPage extends StatefulWidget {
@@ -61,35 +62,48 @@ class _RegisterPageState extends State<RegisterPage> {
       },
       builder: (context, state) {
         final isLoading = state is AuthLoading;
-        return Scaffold(
-          backgroundColor: AppColors.background,
-          appBar: AppBar(
-            backgroundColor: Colors.transparent,
-            elevation: 0,
-            leading: IconButton(
-              icon: const FaIcon(FontAwesomeIcons.arrowLeft, size: 18),
-              onPressed: () => context.go(AppConstants.routeLogin),
-            ),
-          ),
-          body: SafeArea(
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.symmetric(horizontal: 24),
-              child: Form(
-                key: _formKey,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const SizedBox(height: 12),
-                    Text('Create account', style: AppTextStyles.headlineLarge),
-                    const SizedBox(height: 8),
-                    Text(
-                      'Start tracking your expenses smarter.',
-                      style: AppTextStyles.bodyMedium.copyWith(
-                        color: AppColors.textSecondary,
+        return AuthBackground(
+          child: Stack(
+            children: [
+              SingleChildScrollView(
+                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
+                child: Form(
+                  key: _formKey,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const SizedBox(height: 32),
+                      Text('Create account', style: AppTextStyles.headlineLarge),
+                      const SizedBox(height: 8),
+                      Text(
+                        'Start tracking your expenses smarter.',
+                        style: AppTextStyles.bodyMedium.copyWith(
+                          color: AppColors.textSecondary,
+                        ),
                       ),
-                    ),
-                    const SizedBox(height: 36),
-                    AppTextField(
+                      const SizedBox(height: 36),
+
+                      // ── Glassmorphic Form Container ───────────────────────
+                      Container(
+                        padding: const EdgeInsets.all(24),
+                        decoration: BoxDecoration(
+                          color: AppColors.surface.withOpacity(0.5),
+                          borderRadius: BorderRadius.circular(24),
+                          border: Border.all(
+                            color: Colors.white.withOpacity(0.05),
+                            width: 1,
+                          ),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withOpacity(0.2),
+                              blurRadius: 20,
+                              offset: const Offset(0, 10),
+                            ),
+                          ],
+                        ),
+                        child: Column(
+                          children: [
+                            AppTextField(
                       label: 'Full Name',
                       hint: 'John Doe',
                       controller: _nameController,
@@ -173,34 +187,48 @@ class _RegisterPageState extends State<RegisterPage> {
                       isLoading: isLoading,
                     ),
                     const SizedBox(height: 24),
-                    Center(
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Text(
-                            'Already have an account? ',
-                            style: AppTextStyles.bodyMedium.copyWith(
-                              color: AppColors.textSecondary,
-                            ),
-                          ),
-                          GestureDetector(
-                            onTap: () => context.go(AppConstants.routeLogin),
-                            child: Text(
-                              'Sign In',
-                              style: AppTextStyles.bodyMedium.copyWith(
-                                color: AppColors.primary,
-                                fontWeight: FontWeight.w600,
+                            Center(
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Text(
+                                    'Already have an account? ',
+                                    style: AppTextStyles.bodyMedium.copyWith(
+                                      color: AppColors.textSecondary,
+                                    ),
+                                  ),
+                                  GestureDetector(
+                                    onTap: () => context.go(AppConstants.routeLogin),
+                                    child: Text(
+                                      'Sign In',
+                                      style: AppTextStyles.bodyMedium.copyWith(
+                                        color: AppColors.primary,
+                                        fontWeight: FontWeight.w600,
+                                      ),
+                                    ),
+                                  ),
+                                ],
                               ),
                             ),
-                          ),
-                        ],
+                          ],
+                        ),
                       ),
-                    ),
-                    const SizedBox(height: 32),
-                  ],
+                      const SizedBox(height: 32),
+                    ],
+                  ),
                 ),
               ),
-            ),
+              
+              // Back Button overlay
+              Positioned(
+                top: 0,
+                left: 0,
+                child: IconButton(
+                  icon: const FaIcon(FontAwesomeIcons.arrowLeft, size: 18),
+                  onPressed: () => context.go(AppConstants.routeLogin),
+                ),
+              ),
+            ],
           ),
         );
       },

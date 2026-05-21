@@ -2,6 +2,8 @@ import '../../../../core/errors/failures.dart';
 import '../entities/user_entity.dart';
 import '../repositories/auth_repository.dart';
 
+export 'send_password_reset_email_usecase.dart';
+
 /// Returns the currently authenticated user, or null.
 class GetCurrentUserUseCase {
   final AuthRepository _repository;

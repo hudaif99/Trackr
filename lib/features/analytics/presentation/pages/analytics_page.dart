@@ -29,8 +29,7 @@ class AnalyticsPage extends StatelessWidget {
             builder: (context, state) => switch (state) {
               AnalyticsInitial() => _initLoad(context, userId),
               AnalyticsLoading() => _skeleton(),
-              AnalyticsLoaded(:final summary) =>
-                _content(context, summary),
+              AnalyticsLoaded(:final summary) => _content(context, summary),
               AnalyticsError(:final message) => ErrorState(
                   message: message,
                   onRetry: () => context
@@ -182,8 +181,7 @@ class _CategoryBreakdown extends StatelessWidget {
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
             child: Row(
               children: [
-                Text(item.category.emoji,
-                    style: const TextStyle(fontSize: 20)),
+                Text(item.category.emoji, style: const TextStyle(fontSize: 20)),
                 const SizedBox(width: 12),
                 Expanded(
                   child: Column(
@@ -204,8 +202,8 @@ class _CategoryBreakdown extends StatelessWidget {
                         child: LinearProgressIndicator(
                           value: item.percentage / 100,
                           backgroundColor: AppColors.surfaceVariant,
-                          valueColor: AlwaysStoppedAnimation(
-                              _catColor(item.category)),
+                          valueColor:
+                              AlwaysStoppedAnimation(_catColor(item.category)),
                           minHeight: 4,
                         ),
                       ),
@@ -272,12 +270,12 @@ class _MonthlyBarChart extends StatelessWidget {
                 reservedSize: 24,
               ),
             ),
-            leftTitles: const AxisTitles(
-                sideTitles: SideTitles(showTitles: false)),
-            topTitles: const AxisTitles(
-                sideTitles: SideTitles(showTitles: false)),
-            rightTitles: const AxisTitles(
-                sideTitles: SideTitles(showTitles: false)),
+            leftTitles:
+                const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+            topTitles:
+                const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+            rightTitles:
+                const AxisTitles(sideTitles: SideTitles(showTitles: false)),
           ),
           barGroups: trend.asMap().entries.map((e) {
             final isCurrent = e.key == trend.length - 1;
@@ -286,7 +284,8 @@ class _MonthlyBarChart extends StatelessWidget {
               barRods: [
                 BarChartRodData(
                   toY: e.value.total,
-                  color: isCurrent ? AppColors.primary : AppColors.surfaceVariant,
+                  color:
+                      isCurrent ? AppColors.primary : AppColors.surfaceVariant,
                   width: 16,
                   borderRadius: const BorderRadius.vertical(
                     top: Radius.circular(4),
@@ -339,9 +338,12 @@ class _WeeklyChart extends StatelessWidget {
                 reservedSize: 24,
               ),
             ),
-            leftTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-            topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-            rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+            leftTitles:
+                const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+            topTitles:
+                const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+            rightTitles:
+                const AxisTitles(sideTitles: SideTitles(showTitles: false)),
           ),
           barGroups: weekly.asMap().entries.map((e) {
             return BarChartGroupData(

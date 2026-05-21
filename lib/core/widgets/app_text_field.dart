@@ -79,8 +79,12 @@ class AppTextField extends StatelessWidget {
           ),
           decoration: InputDecoration(
             hintText: hint,
-            prefixIcon: prefixIcon,
-            suffixIcon: suffixIcon,
+            prefixIcon: prefixIcon != null 
+                ? Center(widthFactor: 1, heightFactor: 1, child: prefixIcon) 
+                : null,
+            suffixIcon: suffixIcon != null 
+                ? Center(widthFactor: 1, heightFactor: 1, child: suffixIcon) 
+                : null,
             counterText: '',
           ),
         ),

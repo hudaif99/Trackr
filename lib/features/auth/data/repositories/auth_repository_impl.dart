@@ -90,5 +90,19 @@ class AuthRepositoryImpl implements AuthRepository {
   }
 
   @override
+  Future<Failure?> sendPasswordResetEmail({required String email}) async {
+    try {
+      await _dataSource.sendPasswordResetEmail(email: email);
+      return null;
+    } on AuthException catch (e) {
+      return AuthFailure(e.message);
+    } on NetworkException {
+      return const NetworkFailure();
+    } catch (e) {
+      return UnknownFailure(message: e.toString());
+    }
+  }
+
+  @override
   Stream<UserEntity?> get authStateChanges => _dataSource.authStateChanges;
 }
