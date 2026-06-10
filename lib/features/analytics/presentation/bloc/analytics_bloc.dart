@@ -1,7 +1,11 @@
+import 'dart:developer';
+
 import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../../../core/constants/app_constants.dart';
+import '../../../../core/network/network_info.dart';
+import '../../../expenses/data/datasources/expense_local_datasource.dart';
 import '../../../expenses/data/models/expense_model.dart';
 import '../../../expenses/domain/entities/expense_entity.dart';
 import '../../../dashboard/domain/entities/dashboard_entities.dart';
@@ -104,8 +108,14 @@ final class AnalyticsError extends AnalyticsState {
 /// when a focused query service is cleaner and more performant.
 class AnalyticsBloc extends Bloc<AnalyticsEvent, AnalyticsState> {
   final FirebaseFirestore _firestore;
+  final ExpenseLocalDataSource _local;
+  final NetworkInfo _networkInfo;
 
-  AnalyticsBloc(this._firestore) : super(const AnalyticsInitial()) {
+  AnalyticsBloc(
+    this._firestore,
+    this._local,
+    this._networkInfo,
+  ) : super(const AnalyticsInitial()) {
     on<AnalyticsLoadRequested>(_onLoad);
   }
 
@@ -115,40 +125,75 @@ class AnalyticsBloc extends Bloc<AnalyticsEvent, AnalyticsState> {
   ) async {
     emit(const AnalyticsLoading());
 
-    try {
-      final now = DateTime.now();
-      final sixMonthsAgo = DateTime(now.year, now.month - 5, 1);
+    if (await _networkInfo.isConnected) {
+      try {
+        final now = DateTime.now();
+        final sixMonthsAgo = DateTime(now.year, now.month - 5, 1);
 
-      final snap = await _firestore
-          .collection(AppConstants.expensesCollection)
-          .where('userId', isEqualTo: event.userId)
-          .where('date',
-              isGreaterThanOrEqualTo: Timestamp.fromDate(sixMonthsAgo))
-          .orderBy('date', descending: true)
-          .get();
+        final snap = await _firestore
+            .collection(AppConstants.expensesCollection)
+            .where('userId', isEqualTo: event.userId)
+            .where('date',
+                isGreaterThanOrEqualTo: Timestamp.fromDate(sixMonthsAgo))
+            .orderBy('date', descending: true)
+            .get();
 
-      final expenses = snap.docs
-          .map((doc) => ExpenseModel.fromFirestore(doc))
-          .toList();
+        final remote = snap.docs
+            .map((doc) => ExpenseModel.fromFirestore(doc))
+            .toList();
 
-      if (expenses.isEmpty) {
-        emit(const AnalyticsEmpty());
+        // Merge any pending (unsynced) local items not yet on the server.
+        final pending = _local
+            .getExpenses(userId: event.userId)
+            .where((e) => !e.isSynced)
+            .toList();
+        final remoteIds = remote.map((e) => e.id).toSet();
+        final expenses = <ExpenseModel>[
+          ...remote,
+          ...pending
+              .where((e) => !remoteIds.contains(e.id))
+              .map((e) => ExpenseModel.fromEntity(e)),
+        ]..sort((a, b) => b.date.compareTo(a.date));
+
+        if (expenses.isEmpty) {
+          emit(const AnalyticsEmpty());
+          return;
+        }
+
+        emit(AnalyticsLoaded(_buildSummary(expenses, now)));
         return;
+      } catch (e) {
+        // ── INDEX ERROR HELPER ───────────────────────────────────────────────
+        // Firebase prints a direct URL to create the missing index — look for
+        // it in the logs below.
+        log('\n══════ FIRESTORE ERROR [AnalyticsBloc] ══════');
+        log(e.toString());
+        log('══════════════════════════════════════════\n');
+        // Fall through to local cache below.
       }
-
-      emit(AnalyticsLoaded(_buildSummary(expenses, now)));
-    } catch (e) {
-      // ── INDEX ERROR HELPER ─────────────────────────────────────────────────
-      // If this is a Firestore index error, Firebase prints a direct URL below
-      // that auto-creates the missing index. Copy-paste it into your browser.
-      // ignore: avoid_print
-      print('\n══════════ FIRESTORE ERROR [AnalyticsBloc] ══════════');
-      // ignore: avoid_print
-      print(e.toString());
-      // ignore: avoid_print
-      print('═════════════════════════════════════════════════════\n');
-      emit(AnalyticsError('Failed to load analytics: ${e.toString()}'));
     }
+
+    // Offline or Firestore error — build from local Hive cache.
+    log('[AnalyticsBloc] Building from local cache.');
+    _buildFromLocal(event.userId, emit);
+  }
+
+  void _buildFromLocal(String userId, Emitter<AnalyticsState> emit) {
+    final now = DateTime.now();
+    final sixMonthsAgo = DateTime(now.year, now.month - 5, 1);
+
+    final expenses = _local
+        .getExpenses(userId: userId, from: sixMonthsAgo)
+        .map((e) => ExpenseModel.fromEntity(e))
+        .toList()
+      ..sort((a, b) => b.date.compareTo(a.date));
+
+    if (expenses.isEmpty) {
+      emit(const AnalyticsEmpty());
+      return;
+    }
+
+    emit(AnalyticsLoaded(_buildSummary(expenses, now)));
   }
 
   AnalyticsSummary _buildSummary(List<ExpenseModel> expenses, DateTime now) {

@@ -1,3 +1,5 @@
+import 'package:hive_flutter/hive_flutter.dart';
+import '../../../../core/constants/app_constants.dart';
 import '../../../../core/errors/exceptions.dart';
 import '../../../../core/errors/failures.dart';
 import '../../../../core/network/network_info.dart';
@@ -10,10 +12,11 @@ import '../models/expense_model.dart';
 /// Offline-first implementation of [ExpenseRepository].
 ///
 /// Strategy:
-/// - Reads return local data immediately, then refresh from Firestore.
+/// - Reads return local data immediately. If online, refreshes from Firestore
+///   and merges, preserving any pending (unsynced) local items.
 /// - Writes go to Hive first (marked isSynced=false), then to Firestore.
-/// - If offline, the write is stored locally only and will be synced on next
-///   successful connection.
+/// - If offline, the write is also added to the pending_sync queue so
+///   [SyncService] can push it to Firestore when connectivity is restored.
 class ExpenseRepositoryImpl implements ExpenseRepository {
   final ExpenseRemoteDataSource _remote;
   final ExpenseLocalDataSource _local;
@@ -27,6 +30,8 @@ class ExpenseRepositoryImpl implements ExpenseRepository {
         _local = local,
         _networkInfo = networkInfo;
 
+  Box<Map> get _pendingBox => Hive.box<Map>(AppConstants.pendingSyncBox);
+
   @override
   Future<(List<ExpenseEntity>, Failure?)> getExpenses({
     required String userId,
@@ -35,15 +40,6 @@ class ExpenseRepositoryImpl implements ExpenseRepository {
     DateTime? to,
     int limit = 50,
   }) async {
-    // Return cached data immediately for instant UI
-    final cached = _local.getExpenses(
-      userId: userId,
-      category: category?.name,
-      from: from,
-      to: to,
-    );
-
-    // Attempt background refresh if online
     if (await _networkInfo.isConnected) {
       try {
         final remote = await _remote.getExpenses(
@@ -53,14 +49,48 @@ class ExpenseRepositoryImpl implements ExpenseRepository {
           to: to,
           limit: limit,
         );
+
+        // Collect any pending (unsynced) local items BEFORE overwriting cache,
+        // so they are never lost when remote data replaces local storage.
+        final pending = _local
+            .getExpenses(userId: userId)
+            .where((e) => !e.isSynced)
+            .toList();
+
         await _local.saveAll(remote);
-        return (remote as List<ExpenseEntity>, null);
+
+        // Re-save unsynced items so they survive the saveAll above.
+        for (final p in pending) {
+          await _local.saveExpense(p);
+        }
+
+        // Merge: remote list + any pending items not yet on the server.
+        final remoteIds = remote.map((e) => e.id).toSet();
+        final merged = <ExpenseEntity>[
+          ...remote,
+          ...pending.where((e) => !remoteIds.contains(e.id)),
+        ]..sort((a, b) => b.date.compareTo(a.date));
+
+        return (merged, null);
       } on ServerException catch (e) {
-        // Return cached data on remote error
+        // Remote failed — fall through to local cache below.
+        final cached = _local.getExpenses(
+          userId: userId,
+          category: category?.name,
+          from: from,
+          to: to,
+        );
         return (cached as List<ExpenseEntity>, ServerFailure(e.message));
       }
     }
 
+    // Offline — return local cache (includes pending unsynced items).
+    final cached = _local.getExpenses(
+      userId: userId,
+      category: category?.name,
+      from: from,
+      to: to,
+    );
     return (cached as List<ExpenseEntity>, null);
   }
 
@@ -83,12 +113,11 @@ class ExpenseRepositoryImpl implements ExpenseRepository {
   }
 
   @override
-  Future<(ExpenseEntity?, Failure?)> createExpense(ExpenseEntity expense) async {
+  Future<(ExpenseEntity?, Failure?)> createExpense(
+      ExpenseEntity expense) async {
     try {
-      // Always write locally first
-      final local = ExpenseModel.fromEntity(
-        expense.copyWith(isSynced: false),
-      );
+      // Always write locally first, marked as unsynced.
+      final local = ExpenseModel.fromEntity(expense.copyWith(isSynced: false));
       await _local.saveExpense(local);
 
       if (await _networkInfo.isConnected) {
@@ -98,6 +127,12 @@ class ExpenseRepositoryImpl implements ExpenseRepository {
         await _local.saveExpense(syncedModel);
         return (syncedModel, null);
       }
+
+      // Offline — add to the pending queue for SyncService.
+      await _pendingBox.put(expense.id, {
+        'id': expense.id,
+        'operation': 'create',
+      });
       return (local, null);
     } on ServerException catch (e) {
       return (null, ServerFailure(e.message));
@@ -107,7 +142,8 @@ class ExpenseRepositoryImpl implements ExpenseRepository {
   }
 
   @override
-  Future<(ExpenseEntity?, Failure?)> updateExpense(ExpenseEntity expense) async {
+  Future<(ExpenseEntity?, Failure?)> updateExpense(
+      ExpenseEntity expense) async {
     try {
       await _local.saveExpense(expense.copyWith(isSynced: false));
 
@@ -118,6 +154,11 @@ class ExpenseRepositoryImpl implements ExpenseRepository {
         await _local.saveExpense(syncedModel);
         return (syncedModel, null);
       }
+
+      await _pendingBox.put(expense.id, {
+        'id': expense.id,
+        'operation': 'update',
+      });
       return (expense, null);
     } on ServerException catch (e) {
       return (null, ServerFailure(e.message));
@@ -128,6 +169,9 @@ class ExpenseRepositoryImpl implements ExpenseRepository {
   Future<Failure?> deleteExpense(String id) async {
     try {
       await _local.deleteExpense(id);
+      // Remove from pending queue if it was queued offline.
+      await _pendingBox.delete(id);
+
       if (await _networkInfo.isConnected) {
         await _remote.deleteExpense(id);
       }

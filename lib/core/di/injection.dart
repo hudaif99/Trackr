@@ -34,6 +34,7 @@ import '../../features/expenses/domain/usecases/expense_usecases.dart';
 import '../../features/expenses/presentation/bloc/expense_bloc.dart';
 
 import '../../features/analytics/presentation/bloc/analytics_bloc.dart';
+import '../services/sync_service.dart';
 
 /// Global service locator instance.
 final getIt = GetIt.instance;
@@ -162,7 +163,11 @@ void configureDependencies() {
 
   // ── Dashboard feature ────────────────────────────────────────────────────
   getIt.registerLazySingleton<DashboardRemoteDataSource>(
-    () => DashboardRemoteDataSource(getIt<FirebaseFirestore>()),
+    () => DashboardRemoteDataSource(
+      getIt<FirebaseFirestore>(),
+      getIt<ExpenseLocalDataSource>(),
+      getIt<NetworkInfo>(),
+    ),
   );
   getIt.registerLazySingleton<DashboardRepository>(
     () => DashboardRepositoryImpl(getIt<DashboardRemoteDataSource>()),
@@ -176,6 +181,19 @@ void configureDependencies() {
 
   // ── Analytics feature ────────────────────────────────────────────────────
   getIt.registerLazySingleton<AnalyticsBloc>(
-    () => AnalyticsBloc(getIt<FirebaseFirestore>()),
+    () => AnalyticsBloc(
+      getIt<FirebaseFirestore>(),
+      getIt<ExpenseLocalDataSource>(),
+      getIt<NetworkInfo>(),
+    ),
+  );
+
+  // ── Sync service ─────────────────────────────────────────────────────────
+  getIt.registerLazySingleton<SyncService>(
+    () => SyncService(
+      local: getIt<ExpenseLocalDataSource>(),
+      remote: getIt<ExpenseRemoteDataSource>(),
+      connectivity: getIt<Connectivity>(),
+    ),
   );
 }

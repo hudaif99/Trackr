@@ -10,6 +10,7 @@ import 'package:hive_flutter/hive_flutter.dart';
 import 'core/constants/app_constants.dart';
 import 'core/di/injection.dart';
 import 'core/router/app_router.dart';
+import 'core/services/sync_service.dart';
 import 'core/theme/app_theme.dart';
 import 'features/auth/presentation/bloc/auth_bloc.dart';
 
@@ -36,6 +37,9 @@ Future<void> main() async {
 
   // ── Dependency injection ──────────────────────────────────────────────────
   configureDependencies();
+
+  // ── Background sync ──────────────────────────────────────────────────────
+  getIt<SyncService>().start();
 
   // ── Remove native splash ──────────────────────────────────────────────────
   FlutterNativeSplash.remove();
