@@ -163,9 +163,9 @@ class _ShellScaffoldState extends State<_ShellScaffold> {
   Widget build(BuildContext context) {
     return MultiBlocProvider(
       providers: [
-        BlocProvider(create: (_) => getIt<DashboardBloc>()),
-        BlocProvider(create: (_) => getIt<ExpenseListBloc>()),
-        BlocProvider(create: (_) => getIt<AnalyticsBloc>()),
+        BlocProvider.value(value: getIt<DashboardBloc>()),
+        BlocProvider.value(value: getIt<ExpenseListBloc>()),
+        BlocProvider.value(value: getIt<AnalyticsBloc>()),
       ],
       child: Builder(
         builder: (context) {

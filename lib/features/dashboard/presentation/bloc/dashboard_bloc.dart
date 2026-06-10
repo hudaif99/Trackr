@@ -82,11 +82,9 @@ class DashboardBloc extends Bloc<DashboardEvent, DashboardState> {
     DashboardRefreshRequested event,
     Emitter<DashboardState> emit,
   ) async {
-    // Preserve old data while refreshing
-    final current = state;
+    emit(const DashboardLoading());
     final (summary, failure) = await _getSummary(event.userId);
     if (failure != null) {
-      if (current is DashboardLoaded) return; // Keep old data silently
       emit(DashboardError(failure.message));
       return;
     }

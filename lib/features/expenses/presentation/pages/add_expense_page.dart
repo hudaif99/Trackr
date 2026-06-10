@@ -8,11 +8,14 @@ import 'package:go_router/go_router.dart';
 import 'package:uuid/uuid.dart';
 
 import '../../../../core/constants/app_constants.dart';
+import '../../../../core/di/injection.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/widgets/app_button.dart';
 import '../../../../core/widgets/app_text_field.dart';
 import '../../../ai/presentation/bloc/ai_categorization_cubit.dart';
+import '../../../analytics/presentation/bloc/analytics_bloc.dart';
 import '../../../auth/presentation/bloc/auth_bloc.dart';
+import '../../../dashboard/presentation/bloc/dashboard_bloc.dart';
 import '../../domain/entities/expense_entity.dart';
 import '../bloc/expense_bloc.dart';
 import '../widgets/ai_categorization_icon.dart';
@@ -20,9 +23,6 @@ import '../widgets/expense_category_selector.dart';
 import '../widgets/expense_date_picker_button.dart';
 import '../widgets/expense_payment_method_selector.dart';
 
-/// Screen for adding a new expense.
-///
-/// Includes AI-powered auto-categorization with 800ms debounce.
 class AddExpensePage extends StatefulWidget {
   const AddExpensePage({super.key});
 
@@ -88,6 +88,14 @@ class _AddExpensePageState extends State<AddExpensePage> {
         BlocListener<ExpenseFormBloc, ExpenseFormState>(
           listener: (context, state) {
             if (state is ExpenseFormSuccess) {
+              final authState = context.read<AuthBloc>().state;
+              if (authState is AuthAuthenticated) {
+                final uid = authState.user.uid;
+                getIt<DashboardBloc>().add(DashboardRefreshRequested(uid));
+                getIt<ExpenseListBloc>().add(ExpensesRefreshRequested(uid));
+                getIt<AnalyticsBloc>().add(AnalyticsLoadRequested(uid));
+              }
+
               if (context.canPop()) {
                 context.pop();
               } else {

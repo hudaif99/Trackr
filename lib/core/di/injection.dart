@@ -127,7 +127,7 @@ void configureDependencies() {
     () => DeleteExpenseUseCase(getIt<ExpenseRepository>()),
   );
 
-  getIt.registerFactory<ExpenseListBloc>(
+  getIt.registerLazySingleton<ExpenseListBloc>(
     () => ExpenseListBloc(
       getExpenses: getIt<GetExpensesUseCase>(),
       deleteExpense: getIt<DeleteExpenseUseCase>(),
@@ -170,12 +170,12 @@ void configureDependencies() {
   getIt.registerLazySingleton<GetDashboardSummaryUseCase>(
     () => GetDashboardSummaryUseCase(getIt<DashboardRepository>()),
   );
-  getIt.registerFactory<DashboardBloc>(
+  getIt.registerLazySingleton<DashboardBloc>(
     () => DashboardBloc(getIt<GetDashboardSummaryUseCase>()),
   );
 
   // ── Analytics feature ────────────────────────────────────────────────────
-  getIt.registerFactory<AnalyticsBloc>(
+  getIt.registerLazySingleton<AnalyticsBloc>(
     () => AnalyticsBloc(getIt<FirebaseFirestore>()),
   );
 }
