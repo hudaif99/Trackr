@@ -1,19 +1,24 @@
 import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:go_router/go_router.dart';
 import 'package:uuid/uuid.dart';
+
 import '../../../../core/constants/app_constants.dart';
 import '../../../../core/theme/app_colors.dart';
-import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/widgets/app_button.dart';
 import '../../../../core/widgets/app_text_field.dart';
 import '../../../ai/presentation/bloc/ai_categorization_cubit.dart';
 import '../../../auth/presentation/bloc/auth_bloc.dart';
 import '../../domain/entities/expense_entity.dart';
 import '../bloc/expense_bloc.dart';
+import '../widgets/ai_categorization_icon.dart';
+import '../widgets/expense_category_selector.dart';
+import '../widgets/expense_date_picker_button.dart';
+import '../widgets/expense_payment_method_selector.dart';
 
 /// Screen for adding a new expense.
 ///
@@ -143,7 +148,10 @@ class _AddExpensePageState extends State<AddExpensePage> {
                     controller: _titleController,
                     onChanged: _onTitleChanged,
                     textInputAction: TextInputAction.next,
-                    suffixIcon: _buildAiIcon(aiState),
+                    suffixIcon: (aiState is AiCategorizationLoading ||
+                            aiState is AiCategorizationSuccess)
+                        ? AiCategorizationIcon(state: aiState)
+                        : null,
                     validator: (v) =>
                         v == null || v.trim().isEmpty ? 'Required' : null,
                   );
@@ -174,90 +182,23 @@ class _AddExpensePageState extends State<AddExpensePage> {
               const SizedBox(height: 20),
 
               // ── Category chips ─────────────────────────────────────────
-              Text('Category',
-                  style: AppTextStyles.labelMedium.copyWith(
-                    color: AppColors.textSecondary,
-                  )),
-              const SizedBox(height: 8),
-              Wrap(
-                spacing: 8,
-                runSpacing: 8,
-                children: ExpenseCategory.values.map((cat) {
-                  final selected = _category == cat;
-                  return FilterChip(
-                    label: Text('${cat.emoji} ${cat.displayName}'),
-                    selected: selected,
-                    onSelected: (_) => setState(() => _category = cat),
-                    selectedColor: AppColors.primary.withOpacity(0.2),
-                    checkmarkColor: AppColors.primary,
-                    side: BorderSide(
-                      color: selected ? AppColors.primary : AppColors.border,
-                    ),
-                    labelStyle: AppTextStyles.labelMedium.copyWith(
-                      color:
-                          selected ? AppColors.primary : AppColors.textPrimary,
-                    ),
-                  );
-                }).toList(),
+              ExpenseCategorySelector(
+                selectedCategory: _category,
+                onChanged: (cat) => setState(() => _category = cat),
               ),
               const SizedBox(height: 20),
 
               // ── Date ───────────────────────────────────────────────────
-              Text('Date',
-                  style: AppTextStyles.labelMedium.copyWith(
-                    color: AppColors.textSecondary,
-                  )),
-              const SizedBox(height: 8),
-              InkWell(
-                borderRadius: BorderRadius.circular(12),
+              ExpenseDatePickerButton(
+                selectedDate: _date,
                 onTap: _pickDate,
-                child: Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-                  decoration: BoxDecoration(
-                    color: AppColors.surfaceVariant,
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: AppColors.border),
-                  ),
-                  child: Row(
-                    children: [
-                      const FaIcon(FontAwesomeIcons.calendarDays,
-                          color: AppColors.textSecondary, size: 16),
-                      const SizedBox(width: 10),
-                      Text(
-                        '${_date.day} ${_monthName(_date.month)} ${_date.year}',
-                        style: AppTextStyles.bodyMedium,
-                      ),
-                    ],
-                  ),
-                ),
               ),
               const SizedBox(height: 20),
 
               // ── Payment method ─────────────────────────────────────────
-              Text('Payment Method',
-                  style: AppTextStyles.labelMedium.copyWith(
-                    color: AppColors.textSecondary,
-                  )),
-              const SizedBox(height: 8),
-              Wrap(
-                spacing: 8,
-                children: PaymentMethod.values.map((m) {
-                  final selected = _paymentMethod == m;
-                  return ChoiceChip(
-                    label: Text(m.displayName),
-                    selected: selected,
-                    onSelected: (_) => setState(() => _paymentMethod = m),
-                    selectedColor: AppColors.accent.withOpacity(0.15),
-                    side: BorderSide(
-                      color: selected ? AppColors.accent : AppColors.border,
-                    ),
-                    labelStyle: AppTextStyles.labelMedium.copyWith(
-                      color:
-                          selected ? AppColors.accent : AppColors.textPrimary,
-                    ),
-                  );
-                }).toList(),
+              ExpensePaymentMethodSelector(
+                selectedMethod: _paymentMethod,
+                onChanged: (m) => setState(() => _paymentMethod = m),
               ),
               const SizedBox(height: 20),
 
@@ -287,31 +228,6 @@ class _AddExpensePageState extends State<AddExpensePage> {
     );
   }
 
-  Widget? _buildAiIcon(AiCategorizationState state) {
-    return switch (state) {
-      AiCategorizationLoading() => const Padding(
-          padding: EdgeInsets.all(12),
-          child: SizedBox(
-            width: 16,
-            height: 16,
-            child: CircularProgressIndicator(
-              strokeWidth: 2,
-              color: AppColors.primary,
-            ),
-          ),
-        ),
-      AiCategorizationSuccess(:final usedFallback) => Tooltip(
-          message: usedFallback ? 'Categorized locally' : 'AI categorized',
-          child: FaIcon(
-            FontAwesomeIcons.wandMagicSparkles,
-            color: usedFallback ? AppColors.textSecondary : AppColors.primary,
-            size: 18,
-          ),
-        ),
-      _ => null,
-    };
-  }
-
   Future<void> _pickDate() async {
     final picked = await showDatePicker(
       context: context,
@@ -330,20 +246,4 @@ class _AddExpensePageState extends State<AddExpensePage> {
     );
     if (picked != null) setState(() => _date = picked);
   }
-
-  String _monthName(int m) => [
-        '',
-        'Jan',
-        'Feb',
-        'Mar',
-        'Apr',
-        'May',
-        'Jun',
-        'Jul',
-        'Aug',
-        'Sep',
-        'Oct',
-        'Nov',
-        'Dec'
-      ][m];
 }

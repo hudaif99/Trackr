@@ -2,15 +2,15 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:go_router/go_router.dart';
+
 import '../../../../core/constants/app_constants.dart';
-import '../../../../core/extensions/double_x.dart';
 import '../../../../core/theme/app_colors.dart';
-import '../../../../core/theme/app_text_styles.dart';
-import '../../../../core/widgets/skeleton_loader.dart';
 import '../../../../core/widgets/empty_error_states.dart';
+import '../../../../core/widgets/skeleton_loader.dart';
 import '../../../auth/presentation/bloc/auth_bloc.dart';
 import '../../domain/entities/expense_entity.dart';
 import '../bloc/expense_bloc.dart';
+import '../widgets/expense_list_header.dart';
 import '../widgets/expense_tile.dart';
 
 /// Full expense list with category filter tabs and pull-to-refresh.
@@ -107,7 +107,8 @@ class ExpenseListPage extends StatelessWidget {
         child: ListView.builder(
           itemCount: expenses.length + 1, // +1 for header
           itemBuilder: (ctx, i) {
-            if (i == 0) return _header(total, expenses.length);
+            if (i == 0)
+              return ExpenseListHeader(total: total, count: expenses.length);
             final expense = expenses[i - 1];
             return ExpenseTile(
               expense: expense,
@@ -116,48 +117,4 @@ class ExpenseListPage extends StatelessWidget {
           },
         ),
       );
-
-  Widget _header(double total, int count) {
-    return Container(
-      margin: const EdgeInsets.all(16),
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppColors.cardBorder),
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                'This Month',
-                style: AppTextStyles.labelSmall,
-              ),
-              const SizedBox(height: 4),
-              Text(
-                total.inr,
-                style: AppTextStyles.amountLarge.copyWith(
-                  color: AppColors.expense,
-                ),
-              ),
-            ],
-          ),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.end,
-            children: [
-              Text('Transactions', style: AppTextStyles.labelSmall),
-              const SizedBox(height: 4),
-              Text(
-                '$count',
-                style: AppTextStyles.amountLarge,
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
 }

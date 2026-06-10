@@ -1,5 +1,5 @@
 name: fluxo
-description: "Fluxo — AI-assisted expense tracking app."
+description: "Trackr — AI-assisted expense tracking app."
 publish_to: 'none'
 
 version: 1.0.0+1
@@ -54,6 +54,7 @@ dev_dependencies:
   flutter_test:
     sdk: flutter
   flutter_lints: ^4.0.0
+  flutter_native_splash: ^2.4.3
 
 flutter:
   uses-material-design: true
@@ -62,3 +63,20 @@ flutter:
     - assets/images/
     - assets/icons/
     - assets/lottie/
+
+flutter_native_splash:
+  # Dark theme (default)
+  color: "#10B981"
+  image: assets/images/trackr_splash.png
+
+  # Android 12+ specific (uses the new SplashScreen API)
+  android_12:
+    color: "#10B981"
+    image: assets/images/trackr_splash.png
+    icon_background_color: "#10B981"
+
+  # Light theme overrides
+  color_dark: "#10B981"
+  image_dark: assets/images/trackr_splash.png
+
+  web: false

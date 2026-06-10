@@ -1,6 +1,6 @@
 import 'package:equatable/equatable.dart';
 
-/// Expense categories supported by Fluxo.
+/// Expense categories supported by Trackr.
 enum ExpenseCategory {
   food,
   travel,

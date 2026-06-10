@@ -6,7 +6,7 @@ import 'env.dart';
 /// are all centralised here to avoid magic strings scattered across the codebase.
 abstract final class AppConstants {
   // ── App ───────────────────────────────────────────────────────────────────
-  static const String appName = 'Fluxo';
+  static const String appName = 'Trackr';
   static const String appVersion = '1.0.0';
 
   // ── Gemini AI ─────────────────────────────────────────────────────────────

@@ -9,6 +9,8 @@ import '../../../../core/widgets/app_button.dart';
 import '../../../../core/widgets/app_text_field.dart';
 import '../bloc/auth_bloc.dart';
 import '../widgets/auth_background.dart';
+import '../widgets/auth_glass_container.dart';
+import '../widgets/google_sign_in_button.dart';
 
 /// Login screen with email/password and Google sign-in.
 class LoginPage extends StatefulWidget {
@@ -97,23 +99,7 @@ class _LoginPageState extends State<LoginPage> {
                   const SizedBox(height: 36),
 
                   // ── Glassmorphic Form Container ───────────────────────
-                  Container(
-                    padding: const EdgeInsets.all(24),
-                    decoration: BoxDecoration(
-                      color: AppColors.surface.withOpacity(0.5),
-                      borderRadius: BorderRadius.circular(24),
-                      border: Border.all(
-                        color: Colors.white.withOpacity(0.05),
-                        width: 1,
-                      ),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withOpacity(0.2),
-                          blurRadius: 20,
-                          offset: const Offset(0, 10),
-                        ),
-                      ],
-                    ),
+                  AuthGlassContainer(
                     child: Column(
                       children: [
                         // ── Email ─────────────────────────────────────────────
@@ -212,7 +198,7 @@ class _LoginPageState extends State<LoginPage> {
                         const SizedBox(height: 16),
 
                         // ── Google button ─────────────────────────────────────
-                        _GoogleSignInButton(
+                        GoogleSignInButton(
                           isLoading: isLoading,
                           onPressed: () => context
                               .read<AuthBloc>()
@@ -255,42 +241,6 @@ class _LoginPageState extends State<LoginPage> {
           ),
         );
       },
-    );
-  }
-}
-
-class _GoogleSignInButton extends StatelessWidget {
-  final bool isLoading;
-  final VoidCallback onPressed;
-
-  const _GoogleSignInButton({
-    required this.isLoading,
-    required this.onPressed,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return SizedBox(
-      width: double.infinity,
-      height: 52,
-      child: OutlinedButton(
-        onPressed: isLoading ? null : onPressed,
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            FaIcon(
-              FontAwesomeIcons.google,
-              color: AppColors.textPrimary,
-              size: 20,
-            ),
-            const SizedBox(width: 10),
-            Text(
-              'Continue with Google',
-              style: AppTextStyles.labelLarge,
-            ),
-          ],
-        ),
-      ),
     );
   }
 }

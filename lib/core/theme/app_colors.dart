@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-/// Centralized color palette for Fluxo.
+/// Centralized color palette for Trackr.
 /// Dark-first fintech design — all colors are intentional and curated.
 abstract final class AppColors {
   // ── Backgrounds ──────────────────────────────────────────────────────────
@@ -16,8 +16,8 @@ abstract final class AppColors {
   static const Color accent = Color(0xFF22D3EE);
 
   // ── Semantic ──────────────────────────────────────────────────────────────
-  static const Color expense = Color(0xFFF43F5E);       // rose-500 — pairs well on dark slate
-  static const Color expenseLight = Color(0xFFFDA4AF);  // rose-300 — muted light variant
+  static const Color expense = Color(0xFFF43F5E);
+  static const Color expenseLight = Color(0xFFFDA4AF);
   static const Color income = Color(0xFF10B981);
   static const Color warning = Color(0xFFF59E0B);
   static const Color info = Color(0xFF3B82F6);

@@ -3,7 +3,7 @@ import 'package:flutter/services.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_text_styles.dart';
 
-/// Styled text field that matches the Fluxo design system.
+/// Styled text field that matches the Trackr design system.
 class AppTextField extends StatelessWidget {
   final String? label;
   final String? hint;

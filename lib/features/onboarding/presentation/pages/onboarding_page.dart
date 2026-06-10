@@ -5,37 +5,26 @@ import '../../../../core/constants/app_constants.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/widgets/app_button.dart';
-
-class _OnboardingSlide {
-  final String emoji;
-  final String title;
-  final String subtitle;
-
-  const _OnboardingSlide({
-    required this.emoji,
-    required this.title,
-    required this.subtitle,
-  });
-}
+import '../widgets/onboarding_slide_widget.dart';
 
 const _slides = [
-  _OnboardingSlide(
+  OnboardingSlide(
     emoji: '💸',
     title: 'Track Every Rupee',
     subtitle:
         'Add expenses in seconds. Stay on top of where your money goes without the hassle.',
   ),
-  _OnboardingSlide(
+  OnboardingSlide(
     emoji: '📊',
     title: 'Understand Your Patterns',
     subtitle:
         'Visual charts break down your spending by category and time — insights that actually make sense.',
   ),
-  _OnboardingSlide(
+  OnboardingSlide(
     emoji: '🤖',
     title: 'AI-Powered Insights',
     subtitle:
-        'Type any expense and Fluxo automatically categorizes it. Smart finance, zero effort.',
+        'Type any expense and Trackr automatically categorizes it. Smart finance, zero effort.',
   ),
 ];
 
@@ -90,7 +79,7 @@ class _OnboardingPageState extends State<OnboardingPage> {
                 controller: _controller,
                 itemCount: _slides.length,
                 onPageChanged: (i) => setState(() => _page = i),
-                itemBuilder: (_, i) => _SlidePage(slide: _slides[i]),
+                itemBuilder: (_, i) => OnboardingSlideWidget(slide: _slides[i]),
               ),
             ),
 
@@ -140,36 +129,3 @@ class _OnboardingPageState extends State<OnboardingPage> {
   }
 }
 
-class _SlidePage extends StatelessWidget {
-  final _OnboardingSlide slide;
-
-  const _SlidePage({required this.slide});
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 32),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Text(slide.emoji, style: const TextStyle(fontSize: 80)),
-          const SizedBox(height: 40),
-          Text(
-            slide.title,
-            style: AppTextStyles.headlineLarge,
-            textAlign: TextAlign.center,
-          ),
-          const SizedBox(height: 16),
-          Text(
-            slide.subtitle,
-            style: AppTextStyles.bodyLarge.copyWith(
-              color: AppColors.textSecondary,
-              height: 1.6,
-            ),
-            textAlign: TextAlign.center,
-          ),
-        ],
-      ),
-    );
-  }
-}
