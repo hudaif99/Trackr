@@ -10,6 +10,7 @@ import '../../../../core/widgets/skeleton_loader.dart';
 import '../../../auth/presentation/bloc/auth_bloc.dart';
 import '../../domain/entities/expense_entity.dart';
 import '../bloc/expense_bloc.dart';
+import '../utils/expense_delete_helper.dart';
 import '../widgets/expense_list_header.dart';
 import '../widgets/expense_tile.dart';
 
@@ -113,6 +114,7 @@ class ExpenseListPage extends StatelessWidget {
             return ExpenseTile(
               expense: expense,
               onTap: () => ctx.push('/expenses/${expense.id}', extra: expense),
+              onDelete: () => ExpenseDeleteHelper.confirmAndDelete(ctx, expense),
             );
           },
         ),

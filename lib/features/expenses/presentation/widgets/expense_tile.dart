@@ -9,7 +9,7 @@ import '../../domain/entities/expense_entity.dart';
 class ExpenseTile extends StatelessWidget {
   final ExpenseEntity expense;
   final VoidCallback? onTap;
-  final VoidCallback? onDelete;
+  final Future<bool> Function()? onDelete;
 
   const ExpenseTile({
     super.key,
@@ -20,7 +20,7 @@ class ExpenseTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return InkWell(
+    final tile = InkWell(
       onTap: onTap,
       borderRadius: BorderRadius.circular(12),
       child: Padding(
@@ -73,6 +73,24 @@ class ExpenseTile extends StatelessWidget {
             ),
           ],
         ),
+      ),
+    );
+
+    if (onDelete == null) return tile;
+
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(12),
+      child: Dismissible(
+        key: ValueKey('dismiss_${expense.id}'),
+        direction: DismissDirection.endToStart,
+        confirmDismiss: (_) => onDelete!(),
+        background: Container(
+          alignment: Alignment.centerRight,
+          padding: const EdgeInsets.only(right: 20),
+          color: AppColors.expense,
+          child: const Icon(Icons.delete_outline, color: Colors.white),
+        ),
+        child: tile,
       ),
     );
   }

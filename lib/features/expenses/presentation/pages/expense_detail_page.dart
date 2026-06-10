@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../../../core/constants/app_constants.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../domain/entities/expense_entity.dart';
+import '../utils/expense_delete_helper.dart';
 import "../widgets/expense_detail_card.dart";
 import "../widgets/expense_hero_header.dart";
 import "../widgets/expense_meta_card.dart";
@@ -37,6 +38,24 @@ class ExpenseDetailPage extends StatelessWidget {
                 }
               },
             ),
+            actions: [
+              IconButton(
+                icon: const FaIcon(FontAwesomeIcons.trash, size: 18),
+                onPressed: () async {
+                  final deleted = await ExpenseDeleteHelper.confirmAndDelete(
+                    context,
+                    expense,
+                  );
+                  if (deleted && context.mounted) {
+                    if (context.canPop()) {
+                      context.pop();
+                    } else {
+                      context.go(AppConstants.routeDashboard);
+                    }
+                  }
+                },
+              ),
+            ],
             flexibleSpace: FlexibleSpaceBar(
               background: ExpenseHeroHeader(expense: expense),
             ),

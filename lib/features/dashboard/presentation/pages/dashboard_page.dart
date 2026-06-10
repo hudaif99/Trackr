@@ -10,6 +10,7 @@ import '../../../../core/widgets/empty_error_states.dart';
 import '../../../../core/widgets/skeleton_loader.dart';
 import '../../../auth/presentation/bloc/auth_bloc.dart';
 import '../../../expenses/presentation/widgets/expense_tile.dart';
+import '../../../expenses/presentation/utils/expense_delete_helper.dart';
 import '../../domain/entities/dashboard_entities.dart';
 import '../bloc/dashboard_bloc.dart';
 import "../widgets/category_pie_chart.dart";
@@ -241,6 +242,7 @@ class DashboardPage extends StatelessWidget {
                     (e) => ExpenseTile(
                       expense: e,
                       onTap: () => context.push('/expenses/${e.id}', extra: e),
+                      onDelete: () => ExpenseDeleteHelper.confirmAndDelete(context, e),
                     ),
                   ),
                 const SizedBox(height: 100),
